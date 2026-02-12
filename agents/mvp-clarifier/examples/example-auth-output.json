@@ -1,0 +1,36 @@
+{
+  "stories": [
+    {
+      "title": "User can register with email/password",
+      "acceptance_criteria": "POST /auth/register accepts email+password, returns 201 with user ID, password hashed with bcrypt (cost 12), email uniqueness enforced at DB level, audit log records registration event with timestamp and IP",
+      "success_metric": "Can create account and receive confirmation within 200ms p95 latency",
+      "priority": "P0",
+      "repository": "Kerrigan",
+      "estimated_effort": "M"
+    },
+    {
+      "title": "User can login and receive JWT",
+      "acceptance_criteria": "POST /auth/login validates credentials (constant-time comparison), returns 200 with JWT (15min expiry, HS256), includes refresh token (7 day expiry, stored hashed in DB), rate limited to 5 attempts per minute per IP, audit log records login attempts",
+      "success_metric": "Can authenticate and access protected endpoints with valid JWT, invalid attempts blocked",
+      "priority": "P0",
+      "repository": "Kerrigan",
+      "estimated_effort": "M"
+    },
+    {
+      "title": "User can refresh expired JWT",
+      "acceptance_criteria": "POST /auth/refresh accepts refresh token, validates against DB, returns new JWT+refresh pair with refreshed expiry, old refresh token invalidated (one-time use), audit log records refresh events",
+      "success_metric": "Sessions persist beyond JWT expiry without re-login, no security gaps from token reuse",
+      "priority": "P1",
+      "repository": "Kerrigan",
+      "estimated_effort": "S"
+    }
+  ],
+  "risks": [
+    "Password reset flow not included in MVP - defer to post-MVP (P2). Users with forgotten passwords will need manual admin intervention initially.",
+    "Email verification not included - assumes trusted user base for MVP. Add email verification loop in production hardening phase.",
+    "Rate limiting implemented at application level initially - may need WAF/reverse proxy rate limiting for production DDoS protection.",
+    "Audit logging schema may need adjustment for full SOC2/HIPAA audit trail - review with compliance requirements in parallel track."
+  ],
+  "confidence": 85,
+  "rationale": "Standard authentication pattern with well-understood Go libraries (golang-jwt/jwt, golang.org/x/crypto/bcrypt). 2-week timeline is tight but achievable focusing only on core authentication flows (register, login, refresh). Deferred password reset and email verification to keep scope minimal. SOC2/HIPAA compliance requires audit logging from day one, included in all stories. Refresh token pattern ensures session persistence without compromising security. Main uncertainty is integration testing complexity with protected endpoints - may surface edge cases."
+}

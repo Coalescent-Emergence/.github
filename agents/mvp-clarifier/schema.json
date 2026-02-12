@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Coalescent-Emergence/.github/agents/mvp-clarifier/schema.json",
+  "title": "MVP Clarifier Input/Output Schema",
+  "description": "JSON schema for MVP Clarifier agent inputs and outputs",
+  
+  "definitions": {
+    "Input": {
+      "type": "object",
+      "required": ["idea"],
+      "properties": {
+        "idea": {
+          "type": "string",
+          "description": "High-level product idea or feature description",
+          "minLength": 10,
+          "maxLength": 5000
+        },
+        "constraints": {
+          "type": "object",
+          "properties": {
+            "team_size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10,
+              "default": 1,
+              "description": "Number of developers available"
+            },
+            "timeline": {
+              "type": "string",
+              "pattern": "^\\d+\\s+(day|week|month)s?$",
+              "default": "3 months",
+              "description": "Time available for MVP (e.g., '2 weeks', '3 months')"
+            },
+            "budget": {
+              "type": "string",
+              "enum": ["minimal", "moderate", "flexible"],
+              "default": "minimal"
+            },
+            "compliance": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["SOC2", "HIPAA", "GDPR", "none"]
+              },
+              "default": ["SOC2"]
+            }
+          }
+        },
+        "context_links": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          },
+          "description": "Links to relevant ADRs, issues, or documentation"
+        }
+      }
+    },
+    
+    "Output": {
+      "type": "object",
+      "required": ["stories", "risks", "confidence", "rationale"],
+      "properties": {
+        "stories": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "required": ["title", "acceptance_criteria", "success_metric", "priority"],
+            "properties": {
+              "title": {
+                "type": "string",
+                "pattern": "^(User|System|Admin) can .+",
+                "description": "Story in 'User can...' format"
+              },
+              "acceptance_criteria": {
+                "type": "string",
+                "minLength": 20,
+                "description": "Testable conditions for story completion"
+              },
+              "success_metric": {
+                "type": "string",
+                "minLength": 10,
+                "description": "How to measure value delivered"
+              },
+              "priority": {
+                "type": "string",
+                "enum": ["P0", "P1", "P2"],
+                "description": "P0=must have, P1=should have, P2=nice to have"
+              },
+              "repository": {
+                "type": "string",
+                "description": "Target repository for multi-repo features (optional)"
+              },
+              "estimated_effort": {
+                "type": "string",
+                "enum": ["S", "M", "L"],
+                "description": "Small (1-2 days), Medium (3-5 days), Large (1-2 weeks)"
+              }
+            }
+          }
+        },
+        "risks": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 10
+          },
+          "description": "Potential blockers, unknowns, or deferred scope"
+        },
+        "confidence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Confidence score in the MVP scope (0-100)"
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 20,
+          "description": "Brief explanation of approach and key assumptions"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Refactor Auditor Output Schema",
+  "type": "object",
+  "required": ["regression_risks", "test_coverage", "smoke_test_steps", "confidence"],
+  "properties": {
+    "regression_risks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["risk_type", "severity", "description"],
+        "properties": {
+          "risk_type": {
+            "type": "string",
+            "enum": ["behavior_change", "performance", "compatibility", "security"]
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["low", "medium", "high"]
+          },
+          "description": { "type": "string" },
+          "affected_code": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "mitigation": { "type": "string" }
+        }
+      }
+    },
+    "test_coverage": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["good", "adequate", "insufficient"]
+        },
+        "gaps": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "smoke_test_steps": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "rollback_plan": { "type": "string" },
+    "confidence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    }
+  }
+}

@@ -1,0 +1,114 @@
+name: AI Agent - Technical Decomposer
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  decompose-tasks:
+    if: contains(github.event.issue.labels.*.name, 'ai:decompose')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Detect repository and tech stack
+        id: detect
+        run: |
+          REPO_NAME="${{ github.repository }}"
+          
+          # Simple heuristic - in production, would inspect actual repo structure
+          if [[ "$REPO_NAME" == *"Kerrigan"* ]]; then
+            echo "tech_stack=Go" >> $GITHUB_OUTPUT
+          elif [[ "$REPO_NAME" == *"UI"* ]]; then
+            echo "tech_stack=TypeScript/React" >> $GITHUB_OUTPUT
+          elif [[ "$REPO_NAME" == *"Whisper"* ]]; then
+            echo "tech_stack=Python/FastAPI" >> $GITHUB_OUTPUT
+          else
+            echo "tech_stack=Unknown" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Decompose into tasks
+        id: decompose
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TECH_STACK: ${{ steps.detect.outputs.tech_stack }}
+        run: |
+          # Placeholder for OpenAI API call
+          cat > tasks.json << 'EOF'
+          {
+            "tasks": [
+              {
+                "id": "T1",
+                "title": "Setup dependencies",
+                "description": "Add required packages",
+                "depends_on": [],
+                "estimate": "1 hour",
+                "files_affected": ["go.mod"]
+              }
+            ],
+            "tests": [
+              {
+                "type": "unit",
+                "description": "Test core logic",
+                "coverage_target": 80
+              }
+            ],
+            "ci_considerations": ["Add env vars to CI"],
+            "confidence": 80,
+            "rationale": "Standard task breakdown"
+          }
+          EOF
+          
+      - name: Post task breakdown comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const data = JSON.parse(fs.readFileSync('tasks.json', 'utf8'));
+            
+            let comment = `### 🔨 Technical Task Breakdown\n\n`;
+            comment += `**Tech Stack**: ${{ steps.detect.outputs.tech_stack }}\n`;
+            comment += `**Confidence**: ${data.confidence}%\n\n`;
+            
+            comment += `#### Implementation Tasks\n\n`;
+            data.tasks.forEach(task => {
+              const deps = task.depends_on.length > 0 ? ` (depends on: ${task.depends_on.join(', ')})` : '';
+              comment += `**${task.id}**: ${task.title}${deps}\n`;
+              comment += `- ${task.description}\n`;
+              comment += `- **Estimate**: ${task.estimate}\n`;
+              comment += `- **Files**: ${task.files_affected.join(', ')}\n\n`;
+            });
+            
+            comment += `#### Test Requirements\n\n`;
+            data.tests.forEach(test => {
+              comment += `- **${test.type}**: ${test.description} (target: ${test.coverage_target}%)\n`;
+            });
+            
+            if (data.ci_considerations.length > 0) {
+              comment += `\n#### CI/CD Considerations\n\n`;
+              data.ci_considerations.forEach(ci => {
+                comment += `- ${ci}\n`;
+              });
+            }
+            
+            comment += `\n---\n*${data.rationale}*`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+            
+      - name: Remove ai:decompose label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.removeLabel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              name: 'ai:decompose'
+            });

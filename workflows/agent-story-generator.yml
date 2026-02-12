@@ -1,0 +1,87 @@
+name: AI Agent - Story Generator
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  generate-stories:
+    if: contains(github.event.issue.labels.*.name, 'ai:generate')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Extract issue context
+        id: context
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          echo "Processing feature for story generation"
+          
+      - name: Generate stories
+        id: generate
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          # Placeholder - actual implementation would call OpenAI with story-generator prompt
+          cat > stories.json << 'EOF'
+          {
+            "stories": [
+              {
+                "title": "User can perform action X",
+                "acceptance_criteria": ["Criterion 1", "Criterion 2"],
+                "complexity": "M",
+                "dependencies": [],
+                "test_strategy": "Integration tests",
+                "labels": ["type:feature", "effort:medium"]
+              }
+            ],
+            "confidence": 87,
+            "rationale": "Standard decomposition..."
+          }
+          EOF
+          
+      - name: Create story issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const data = JSON.parse(fs.readFileSync('stories.json', 'utf8'));
+            
+            let comment = `### 📝 Generated Stories (${data.stories.length})\n\n`;
+            comment += `**Confidence**: ${data.confidence}%\n\n`;
+            
+            for (const story of data.stories) {
+              comment += `#### ${story.title}\n\n`;
+              comment += `**Complexity**: ${story.complexity}\n`;
+              comment += `**Acceptance Criteria**:\n`;
+              story.acceptance_criteria.forEach(ac => {
+                comment += `- ${ac}\n`;
+              });
+              comment += `\n**Test Strategy**: ${story.test_strategy}\n\n`;
+              comment += `**Suggested Labels**: ${story.labels.join(', ')}\n\n`;
+              comment += `---\n\n`;
+            }
+            
+            comment += `\n**Rationale**: ${data.rationale}\n\n`;
+            comment += `*Review stories above. To create as separate issues, add \`ai:approved\` label.*`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+            
+      - name: Remove ai:generate label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.removeLabel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              name: 'ai:generate'
+            });

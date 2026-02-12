@@ -1,12 +1,50 @@
 # CODEOWNERS — Solo founder default; expand later to teams as needed.
 # Format: <pattern> <owner>
-# Primary fallback owner for any path:
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# ============================================================================
+# GLOBAL DEFAULT OWNER
+# ============================================================================
+# Primary fallback owner for any path (solo founder until team ≥3 engineers):
 * @jay13jay
 
-# Ownership for ADRs and architecture docs:
+# ============================================================================
+# GOVERNANCE & SECURITY (Always requires founder approval)
+# ============================================================================
+# ADRs and architecture decisions:
 docs/decisions/ @jay13jay
 
-# Add more scoped owners here as the org grows:
-# /infra/ @jay13jay
-# /api/ @jay13jay
-# /ui/ @jay13jay
+# Security policies and sensitive configs:
+SECURITY.md @jay13jay
+.github/workflows/ @jay13jay
+.github/CODEOWNERS @jay13jay
+
+# ============================================================================
+# AREA-SPECIFIC OWNERSHIP (Activate when scaling to teams)
+# ============================================================================
+# When creating @org/backend team, uncomment:
+# /api/ @org/backend
+# /services/ @org/backend
+# /migrations/ @org/backend
+# /database/ @org/backend
+
+# When creating @org/frontend team, uncomment:
+# /ui/ @org/frontend
+# /web/ @org/frontend
+# /components/ @org/frontend
+# /client/ @org/frontend
+
+# When creating @org/platform team, uncomment:
+# /infra/ @org/platform @jay13jay
+# /terraform/ @org/platform @jay13jay
+# /k8s/ @org/platform @jay13jay
+# /.github/ @org/platform @jay13jay
+# /deployments/ @org/platform @jay13jay
+
+# ============================================================================
+# MIGRATION PATH
+# ============================================================================
+# Solo (now): All ownership via @jay13jay catch-all above
+# First hire (3-6mo): Keep individual assignments, no teams yet
+# 3+ engineers: Create teams, uncomment relevant sections above
+# 5+ engineers: Replace catch-all with: * @org/engineering

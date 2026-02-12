@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ADR Generator Output Schema",
+  "type": "object",
+  "required": ["adr_content", "filename", "target_path", "confidence"],
+  "properties": {
+    "adr_content": {
+      "type": "string",
+      "description": "Complete MADR-formatted markdown content"
+    },
+    "filename": {
+      "type": "string",
+      "pattern": "^\\d{4}-.+\\.md$"
+    },
+    "target_path": {
+      "type": "string",
+      "enum": [".github/docs/decisions/", "{repo}/docs/decisions/"]
+    },
+    "checklist": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "confidence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "rationale": { "type": "string" }
+  }
+}

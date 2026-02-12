@@ -1,0 +1,82 @@
+{
+  "diagram_type": "C4Container",
+  "mermaid_code": "C4Container\n    title Container Diagram - Coalescent-Emergence Platform MVP\n\n    Person(provider, \"Healthcare Provider\", \"Medical professional\")\n    Person(admin, \"System Admin\", \"Platform administrator\")\n    \n    System_Boundary(platform, \"Coalescent-Emergence\") {\n        Container(ui, \"Web UI\", \"React/TypeScript\", \"Audio recording and transcription display\")\n        Container(kerrigan, \"Kerrigan Backend\", \"Go\", \"API gateway, auth, workflow orchestration\")\n        Container(whisper, \"Whisper-STT Service\", \"Python/FastAPI\", \"Audio transcription\")\n        ContainerDb(db, \"Database\", \"PostgreSQL 15\", \"Users, metadata, audit logs\")\n        Container(storage, \"Audio Storage\", \"S3-compatible\", \"Raw audio files\")\n    }\n    \n    System_Ext(whisper_model, \"Whisper Model\", \"OpenAI Whisper Large-v3\")\n    \n    Rel(provider, ui, \"Records audio, views transcripts\", \"HTTPS\")\n    Rel(admin, ui, \"Manages users\", \"HTTPS\")\n    Rel(ui, kerrigan, \"API calls\", \"REST/JSON + WebSocket\")\n    Rel(kerrigan, db, \"Reads/writes\", \"SQL\")\n    Rel(kerrigan, storage, \"Stores audio\", \"S3 API\")\n    Rel(kerrigan, whisper, \"Submit jobs, stream results\", \"HTTP + SSE\")\n    Rel(whisper, storage, \"Fetch audio\", \"S3 API\")\n    Rel(whisper, whisper_model, \"Inference\", \"Local\")\n    Rel(whisper, db, \"Log processing\", \"SQL\")",
+  "containers": [
+    {
+      "name": "Web UI",
+      "repository": "UI",
+      "technology": "React 18, TypeScript, Vite, TanStack Query",
+      "responsibility": "Browser-based audio recording (WebRTC), real-time transcription display, user management"
+    },
+    {
+      "name": "Kerrigan Backend",
+      "repository": "Kerrigan",
+      "technology": "Go 1.23, Chi router, golang-jwt, pgx",
+      "responsibility": "Authentication/authorization, REST API, WebSocket orchestration, audit logging"
+    },
+    {
+      "name": "Whisper-STT Service",
+      "repository": "Whisper-STT",
+      "technology": "Python 3.11, FastAPI, faster-whisper, Redis",
+      "responsibility": "Audio transcription using Whisper model, job queue processing, streaming results"
+    },
+    {
+      "name": "Database",
+      "repository": "N/A (infrastructure)",
+      "technology": "PostgreSQL 15",
+      "responsibility": "Persistent storage for users, sessions, transcription metadata, HIPAA audit logs"
+    },
+    {
+      "name": "Audio Storage",
+      "repository": "N/A (infrastructure)",
+      "technology": "MinIO (dev) / AWS S3 (prod)",
+      "responsibility": "Object storage for raw audio files, encrypted at rest"
+    }
+  ],
+  "component_recommendations": [
+    {
+      "name": "Kerrigan: Auth Service + JWT Middleware",
+      "repository": "Kerrigan",
+      "priority": 1,
+      "description": "Implement authentication (register, login, refresh) with JWT issuance and validation middleware for protected endpoints. Foundation for all other services.",
+      "dependencies": []
+    },
+    {
+      "name": "Kerrigan: Audio Upload Handler",
+      "repository": "Kerrigan",
+      "priority": 2,
+      "description": "POST /audio endpoint accepting multipart audio files, validation (format, size), upload to S3 with metadata stored in DB.",
+      "dependencies": ["Auth Service"]
+    },
+    {
+      "name": "Whisper-STT: Batch Transcription Worker",
+      "repository": "Whisper-STT",
+      "priority": 3,
+      "description": "Background worker consuming transcription jobs, fetching audio from S3, running Whisper inference, storing results.",
+      "dependencies": ["Audio Upload Handler"]
+    },
+    {
+      "name": "Kerrigan: Job Status API",
+      "repository": "Kerrigan",
+      "priority": 4,
+      "description": "GET /jobs/:id endpoint for polling transcription status, integrates with Whisper service via shared DB or Redis.",
+      "dependencies": ["Batch Transcription Worker"]
+    },
+    {
+      "name": "UI: Audio Recorder Component",
+      "repository": "UI",
+      "priority": 5,
+      "description": "React component using MediaRecorder API, chunk uploads to Kerrigan, status polling, transcription display.",
+      "dependencies": ["Audio Upload Handler", "Job Status API"]
+    }
+  ],
+  "cross_repo_dependencies": [
+    "Kerrigan auth must be complete before UI or Whisper can make authenticated calls",
+    "Shared audio metadata schema (file ID, format, duration) needs agreement between Kerrigan and Whisper - recommend ADR",
+    "S3 bucket structure and permissions must be configured before either service can store/fetch audio",
+    "Database schema shared between Kerrigan and Whisper - use migrations in Kerrigan repo, Whisper reads only"
+  ],
+  "adr_needed": true,
+  "confidence": 82,
+  "rationale": "Standard three-tier web architecture (UI, API, worker service) with proven technology stack. Go for backend provides performance and simplicity, Python for ML service is standard for Whisper integration. Separated Whisper into own service for independent scaling and GPU allocation. Main assumptions: (1) batch processing acceptable for MVP (not real-time streaming yet), (2) S3-compatible storage sufficient (no need for specialized audio storage), (3) synchronous HTTP + polling pattern (WebSocket streaming deferred to post-MVP). Uncertainty around Whisper latency at scale - may need Redis job queue instead of DB polling. Recommend ADR for shared schema design and job status polling strategy."
+}

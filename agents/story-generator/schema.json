@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Story Generator Output Schema",
+  "type": "object",
+  "required": ["stories", "confidence", "rationale"],
+  "properties": {
+    "stories": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["title", "acceptance_criteria", "complexity"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "pattern": "^(User|System|Admin) can .+"
+          },
+          "acceptance_criteria": {
+            "type": "array",
+            "items": { "type": "string" },
+            "minItems": 1
+          },
+          "complexity": {
+            "type": "string",
+            "enum": ["S", "M", "L"]
+          },
+          "dependencies": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "test_strategy": { "type": "string" },
+          "repository": { "type": "string" },
+          "labels": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "confidence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "rationale": { "type": "string" }
+  }
+}

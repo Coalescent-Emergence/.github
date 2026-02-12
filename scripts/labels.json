@@ -1,0 +1,270 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "GitHub label taxonomy for AI-assisted solo founder development. See LABELS.md for complete documentation.",
+  "labels": [
+    {
+      "name": "type:bug",
+      "color": "d73a4a",
+      "description": "Bug report or defect",
+      "category": "type"
+    },
+    {
+      "name": "type:feature",
+      "color": "0e8a16",
+      "description": "New feature or enhancement",
+      "category": "type"
+    },
+    {
+      "name": "type:refactor",
+      "color": "fbca04",
+      "description": "Code refactoring or cleanup",
+      "category": "type"
+    },
+    {
+      "name": "type:infra",
+      "color": "1d76db",
+      "description": "Infrastructure, tooling, CI/CD",
+      "category": "type"
+    },
+    {
+      "name": "type:architecture",
+      "color": "5319e7",
+      "description": "Architectural decision or ADR",
+      "category": "type"
+    },
+    {
+      "name": "p0",
+      "color": "d73a4a",
+      "description": "Blocker / Hotfix / Production outage",
+      "category": "priority"
+    },
+    {
+      "name": "p1",
+      "color": "ff9800",
+      "description": "High priority / Significant impact",
+      "category": "priority"
+    },
+    {
+      "name": "p2",
+      "color": "ffc107",
+      "description": "Medium priority / Normal flow",
+      "category": "priority"
+    },
+    {
+      "name": "p3",
+      "color": "4caf50",
+      "description": "Low priority / Nice to have",
+      "category": "priority"
+    },
+    {
+      "name": "status:triage",
+      "color": "ededed",
+      "description": "Newly filed, needs acceptance criteria",
+      "category": "status"
+    },
+    {
+      "name": "status:in-progress",
+      "color": "0052cc",
+      "description": "Active development underway",
+      "category": "status"
+    },
+    {
+      "name": "status:blocked",
+      "color": "e11d21",
+      "description": "Blocked by external dependency",
+      "category": "status"
+    },
+    {
+      "name": "status:on-hold",
+      "color": "f9d0c4",
+      "description": "Paused, deprioritized",
+      "category": "status"
+    },
+    {
+      "name": "status:needs-review",
+      "color": "fbca04",
+      "description": "Ready for human review",
+      "category": "status"
+    },
+    {
+      "name": "status:done",
+      "color": "0e8a16",
+      "description": "Completed and merged",
+      "category": "status"
+    },
+    {
+      "name": "effort:S",
+      "color": "c2e0c6",
+      "description": "Small: < 4 hours, single file",
+      "category": "effort"
+    },
+    {
+      "name": "effort:M",
+      "color": "fef2c0",
+      "description": "Medium: 1-2 days, multiple files",
+      "category": "effort"
+    },
+    {
+      "name": "effort:L",
+      "color": "f9d0c4",
+      "description": "Large: 3+ days, cross-cutting change",
+      "category": "effort"
+    },
+    {
+      "name": "area:backend",
+      "color": "d4c5f9",
+      "description": "API, database, business logic",
+      "category": "area"
+    },
+    {
+      "name": "area:frontend",
+      "color": "c5def5",
+      "description": "UI, UX, client-side",
+      "category": "area"
+    },
+    {
+      "name": "area:platform",
+      "color": "bfdadc",
+      "description": "Infra, CI/CD, deployment",
+      "category": "area"
+    },
+    {
+      "name": "area:architecture",
+      "color": "5319e7",
+      "description": "Cross-cutting, ADRs",
+      "category": "area"
+    },
+    {
+      "name": "area:unspecified",
+      "color": "ededed",
+      "description": "Default for triage, needs clarification",
+      "category": "area"
+    },
+    {
+      "name": "team:ready",
+      "color": "0e8a16",
+      "description": "Prepped for delegation: clear ACs, effort estimated",
+      "category": "team"
+    },
+    {
+      "name": "good-first-issue",
+      "color": "7057ff",
+      "description": "Onboarding task, pair programming recommended",
+      "category": "team"
+    },
+    {
+      "name": "help-wanted",
+      "color": "008672",
+      "description": "External contribution welcome",
+      "category": "team"
+    },
+    {
+      "name": "ai:clarify",
+      "color": "e99695",
+      "description": "MVP Clarifier output attached",
+      "category": "ai"
+    },
+    {
+      "name": "ai:decompose",
+      "color": "f9d0c4",
+      "description": "Story/task decomposition generated",
+      "category": "ai"
+    },
+    {
+      "name": "ai:review",
+      "color": "fef2c0",
+      "description": "Architecture/refactor review posted",
+      "category": "ai"
+    },
+    {
+      "name": "ai:generate",
+      "color": "d4c5f9",
+      "description": "ADR or code generated",
+      "category": "ai"
+    },
+    {
+      "name": "ai:approved",
+      "color": "0e8a16",
+      "description": "Human accepted AI suggestion",
+      "category": "ai"
+    },
+    {
+      "name": "debt:technical",
+      "color": "fbca04",
+      "description": "Code quality, architecture smell",
+      "category": "debt"
+    },
+    {
+      "name": "debt:security",
+      "color": "d73a4a",
+      "description": "Security vulnerability or hardening needed",
+      "category": "debt"
+    },
+    {
+      "name": "debt:ux",
+      "color": "c5def5",
+      "description": "User experience friction",
+      "category": "debt"
+    },
+    {
+      "name": "debt:docs",
+      "color": "ededed",
+      "description": "Missing or outdated documentation",
+      "category": "debt"
+    },
+    {
+      "name": "meta:security",
+      "color": "b60205",
+      "description": "Private security issue (see SECURITY.md)",
+      "category": "meta"
+    },
+    {
+      "name": "meta:process",
+      "color": "c2e0c6",
+      "description": "Workflow or policy question",
+      "category": "meta"
+    },
+    {
+      "name": "meta:compliance",
+      "color": "5319e7",
+      "description": "SOC2/HIPAA audit requirement",
+      "category": "meta"
+    },
+    {
+      "name": "env:development",
+      "color": "1d76db",
+      "description": "Development environment only",
+      "category": "environment"
+    },
+    {
+      "name": "env:staging",
+      "color": "fbca04",
+      "description": "Staging environment issue",
+      "category": "environment"
+    },
+    {
+      "name": "env:production",
+      "color": "d73a4a",
+      "description": "Production environment issue",
+      "category": "environment"
+    }
+  ],
+  "deprecated": [
+    "type:chore",
+    "area:infra",
+    "area:api",
+    "area:ui",
+    "ai:suggestion",
+    "ai:reviewed",
+    "status:review"
+  ],
+  "migration": {
+    "type:chore": "type:infra",
+    "area:infra": "area:platform",
+    "area:api": "area:backend",
+    "area:ui": "area:frontend",
+    "ai:suggestion": "ai:decompose or ai:review (context-dependent)",
+    "ai:reviewed": "ai:approved",
+    "status:review": "status:needs-review"
+  }
+}

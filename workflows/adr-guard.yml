@@ -4,9 +4,10 @@ on:
     paths:
       - 'docs/decisions/**'
 
+# Explicit least-privilege permissions for SOC2/HIPAA compliance
 permissions:
-  contents: read
-  pull-requests: write
+  contents: read        # Read repository contents and ADR files
+  pull-requests: write  # Comment on PRs with lint results
 
 jobs:
   adr-lint:

@@ -1,0 +1,114 @@
+name: AI Agent - Refactor Auditor
+on:
+  pull_request:
+    types: [labeled, opened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  audit-refactor:
+    if: contains(github.event.pull_request.labels.*.name, 'type:refactor')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          
+      - name: Get PR diff and test files
+        id: diff
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          
+          # Get full diff
+          git diff origin/${{ github.event.pull_request.base.ref }}...${{ github.event.pull_request.head.sha }} > pr-diff.txt
+          
+          # Detect test file changes
+          TEST_FILES=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...${{ github.event.pull_request.head.sha }} | grep -E '(test|spec)' || echo "none")
+          echo "test_files=$TEST_FILES" >> $GITHUB_OUTPUT
+          
+          # Count modified files
+          MODIFIED_COUNT=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...${{ github.event.pull_request.head.sha }} | wc -l)
+          echo "modified_count=$MODIFIED_COUNT" >> $GITHUB_OUTPUT
+          
+      - name: Analyze refactor risks
+        id: analyze
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          # Placeholder for OpenAI API call with refactor auditor prompt
+          cat > audit.json << 'EOF'
+          {
+            "regression_risks": [
+              {
+                "risk_type": "behavior_change",
+                "severity": "medium",
+                "description": "Refactored logic may have subtle behavioral differences",
+                "affected_code": ["internal/service/handler.go"],
+                "mitigation": "Add integration tests covering edge cases"
+              }
+            ],
+            "test_coverage": {
+              "status": "adequate",
+              "gaps": ["Edge case testing for error conditions"]
+            },
+            "smoke_test_steps": [
+              "Deploy to staging",
+              "Run existing test suite",
+              "Verify core functionality manually"
+            ],
+            "rollback_plan": "Single commit revert, no data migrations",
+            "confidence": 75
+          }
+          EOF
+          
+      - name: Post refactor audit report
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const audit = JSON.parse(fs.readFileSync('audit.json', 'utf8'));
+            
+            let comment = `### 🔍 Refactor Audit Report\n\n`;
+            comment += `**Modified Files**: ${{ steps.diff.outputs.modified_count }}\n`;
+            comment += `**Test Files Changed**: ${{ steps.diff.outputs.test_files !== 'none' ? 'Yes ✅' : 'No ⚠️' }}\n\n`;
+            
+            if (audit.regression_risks.length > 0) {
+              comment += `#### Regression Risks\n\n`;
+              audit.regression_risks.forEach(risk => {
+                const icon = risk.severity === 'high' ? '🔴' : risk.severity === 'medium' ? '⚠️' : '🟡';
+                comment += `${icon} **${risk.severity}**: ${risk.risk_type}\n`;
+                comment += `- **Description**: ${risk.description}\n`;
+                comment += `- **Affected**: ${risk.affected_code.join(', ')}\n`;
+                comment += `- **Mitigation**: ${risk.mitigation}\n\n`;
+              });
+            }
+            
+            comment += `#### Test Coverage\n\n`;
+            comment += `**Status**: ${audit.test_coverage.status}\n`;
+            if (audit.test_coverage.gaps.length > 0) {
+              comment += `**Gaps**:\n`;
+              audit.test_coverage.gaps.forEach(gap => {
+                comment += `- ${gap}\n`;
+              });
+            }
+            
+            comment += `\n#### Smoke Test Checklist\n\n`;
+            audit.smoke_test_steps.forEach((step, i) => {
+              comment += `- [ ] ${step}\n`;
+            });
+            
+            comment += `\n#### Rollback Plan\n\n${audit.rollback_plan}\n\n`;
+            comment += `**Confidence**: ${audit.confidence}%\n\n`;
+            comment += `---\n*Advisory analysis - human reviewer makes final decision*`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });

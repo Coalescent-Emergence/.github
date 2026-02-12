@@ -52,6 +52,5 @@ Example outputs & schema
 - For ADR drafts: Provide a complete MADR-style markdown ready to copy to `docs/decisions/`.
 
 Operational notes
-- Use `OPENAI_API_KEY` stored in repo/org secrets.
 - Configure AI workflows to run only for same-repository PRs.
 - Label AI suggestions with `ai:suggestion`; they are advisory only.

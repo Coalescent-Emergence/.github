@@ -1,0 +1,13 @@
+{
+  "idea": "We need a way for users to authenticate via email/password and get a JWT token for API access. This will be the foundation for all protected endpoints in the Kerrigan backend.",
+  "constraints": {
+    "team_size": 1,
+    "timeline": "2 weeks",
+    "budget": "minimal",
+    "compliance": ["SOC2", "HIPAA"]
+  },
+  "context_links": [
+    "https://github.com/Coalescent-Emergence/.github/docs/decisions/0003-layered-service-architecture.md",
+    "https://github.com/Coalescent-Emergence/Kerrigan/issues/1"
+  ]
+}

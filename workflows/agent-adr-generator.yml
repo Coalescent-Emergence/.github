@@ -1,0 +1,106 @@
+name: AI Agent - ADR Generator
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  generate-adr:
+    if: contains(github.event.issue.labels.*.name, 'type:architecture')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        
+      - name: Determine ADR scope
+        id: scope
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          # Check if this is org-wide or repo-specific based on issue labels/content
+          if echo "$ISSUE_BODY" | grep -qi "organization\|cross-repo\|all repositories"; then
+            echo "scope=org" >> $GITHUB_OUTPUT
+            echo "path=.github/docs/decisions" >> $GITHUB_OUTPUT
+          else
+            echo "scope=repo" >> $GITHUB_OUTPUT
+            echo "path=docs/decisions" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Get next ADR number
+        id: number
+        run: |
+          ADR_PATH="${{ steps.scope.outputs.path }}"
+          if [ -d "$ADR_PATH" ]; then
+            LAST_NUM=$(ls "$ADR_PATH" | grep -E '^[0-9]{4}-' | sort | tail -1 | cut -d'-' -f1)
+            NEXT_NUM=$(printf "%04d" $((10#$LAST_NUM + 1)))
+          else
+            NEXT_NUM="0001"
+          fi
+          echo "next_number=$NEXT_NUM" >> $GITHUB_OUTPUT
+          
+      - name: Generate ADR draft
+        id: generate
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          # Placeholder for OpenAI API call with ADR generator prompt
+          cat > adr-draft.md << 'EOF'
+          # ${{ steps.number.outputs.next_number }}. Example Architecture Decision
+          
+          Date: $(date +%Y-%m-%d)
+          
+          ## Status
+          
+          Proposed
+          
+          ## Context
+          
+          [AI would fill this based on issue description]
+          
+          ## Decision
+          
+          [AI would generate decision and rationale]
+          
+          ## Consequences
+          
+          - Good, because...
+          - Bad, because...
+          
+          ## Validation
+          
+          - [ ] Verification step 1
+          - [ ] Verification step 2
+          EOF
+          
+      - name: Create PR with ADR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const adrContent = fs.readFileSync('adr-draft.md', 'utf8');
+            const number = '${{ steps.number.outputs.next_number }}';
+            const path = '${{ steps.scope.outputs.path }}';
+            
+            // For demo, just post as comment
+            // In production, would create a branch and PR
+            const comment = `### 📋 ADR Draft Generated\n\n`;
+            comment += `**Scope**: ${{ steps.scope.outputs.scope }}\n`;
+            comment += `**Path**: \`${path}/${number}-<title>.md\`\n\n`;
+            comment += `<details><summary>View ADR Draft</summary>\n\n\`\`\`markdown\n${adrContent}\n\`\`\`\n\n</details>\n\n`;
+            comment += `Review the draft above. When ready:\n`;
+            comment += `1. Create file at suggested path\n`;
+            comment += `2. Update title and filename\n`;
+            comment += `3. Submit as PR for review\n`;
+            comment += `4. Link this issue in the PR\n`;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });

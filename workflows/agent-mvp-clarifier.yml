@@ -1,0 +1,98 @@
+name: AI Agent - MVP Clarifier
+on:
+  issues:
+    types: [labeled, opened]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  clarify-mvp:
+    if: contains(github.event.issue.labels.*.name, 'ai:clarify')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        
+      - name: Extract issue context
+        id: context
+        run: |
+          echo "repository=${{ github.repository }}" >> $GITHUB_OUTPUT
+          echo "issue_number=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
+          
+      - name: Call OpenAI API for MVP decomposition
+        id: clarify
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          # This is a placeholder - actual implementation would call OpenAI API
+          # with the system prompt from agents/mvp-clarifier/prompt.md
+          echo "AI agent would analyze issue and generate structured MVP stories"
+          echo "For production: Use OpenAI SDK to call GPT-4 with prompt template"
+          
+          # Mock output for now
+          cat > response.json << 'EOF'
+          {
+            "stories": [
+              {"title": "User can...", "acceptance_criteria": "...", "success_metric": "...", "priority": "P0"},
+              {"title": "User can...", "acceptance_criteria": "...", "success_metric": "...", "priority": "P0"},
+              {"title": "User can...", "acceptance_criteria": "...", "success_metric": "...", "priority": "P1"}
+            ],
+            "risks": ["Risk 1", "Risk 2"],
+            "confidence": 85,
+            "rationale": "Explanation..."
+          }
+          EOF
+          
+      - name: Post MVP analysis as comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const response = JSON.parse(fs.readFileSync('response.json', 'utf8'));
+            
+            const comment = `### 🎯 MVP Clarifier Analysis
+            
+            **Confidence**: ${response.confidence}%
+            
+            #### Proposed Stories
+            
+            ${response.stories.map((story, i) => `
+            **${i + 1}. ${story.title}** (${story.priority})
+            - **Acceptance Criteria**: ${story.acceptance_criteria}
+            - **Success Metric**: ${story.success_metric}
+            `).join('\n')}
+            
+            #### Risks
+            
+            ${response.risks.map(risk => `- ${risk}`).join('\n')}
+            
+            #### Rationale
+            
+            ${response.rationale}
+            
+            ---
+            *This is an AI-generated analysis. Human review required before proceeding.*
+            *Add \`ai:generate\` label to create story issues, or \`ai:approved\` to confirm manually.*
+            `;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+            
+      - name: Remove ai:clarify label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.removeLabel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              name: 'ai:clarify'
+            });

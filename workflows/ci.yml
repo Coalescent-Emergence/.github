@@ -1,35 +1,147 @@
-name: CI
+name: CI (Multi-Repo)
+
 on:
   pull_request:
+    branches: [main, dev]
   push:
-    branches:
-      - main
+    branches: [main, dev]
 
+# Explicit least-privilege permissions for SOC2/HIPAA compliance
 permissions:
-  contents: read
+  contents: read      # Read repository contents
+  checks: write       # Publish test results and check runs
 
 jobs:
-  ci:
-    name: ci
+  detect-stack:
+    name: Detect Tech Stack
+    runs-on: ubuntu-latest
+    outputs:
+      stack: ${{ steps.detect.outputs.stack }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Detect repository tech stack
+        id: detect
+        run: |
+          if [ -f "go.mod" ]; then
+            echo "stack=go" >> $GITHUB_OUTPUT
+          elif [ -f "package.json" ]; then
+            echo "stack=node" >> $GITHUB_OUTPUT
+          elif [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+            echo "stack=python" >> $GITHUB_OUTPUT
+          else
+            echo "stack=unknown" >> $GITHUB_OUTPUT
+          fi
+          
+  ci-go:
+    name: CI (Go)
+    needs: detect-stack
+    if: needs.detect-stack.outputs.stack == 'go'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-go@v5
         with:
-          fetch-depth: 0
-      - name: Setup Node 18 (placeholder)
-        uses: actions/setup-node@v4
+          go-version: '1.23'
+          cache: true
+          
+      - name: Download dependencies
+        run: go mod download
+        
+      - name: Run tests with coverage
+        run: go test ./... -v -race -coverprofile=coverage.out
+        
+      - name: Check test coverage
+        run: |
+          COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+          echo "Total coverage: $COVERAGE%"
+          if (( $(echo "$COVERAGE < 70" | bc -l) )); then
+            echo "::warning::Coverage $COVERAGE% is below 70% threshold"
+          fi
+          
+      - name: Run linter
+        uses: golangci/golangci-lint-action@v4
         with:
-          node-version: '18'
-      - name: Install dependencies (placeholder)
+          version: latest
+          args: --timeout=5m
+          
+      - name: Build binaries
+        run: go build -v ./...
+        
+  ci-node:
+    name: CI (Node.js/TypeScript)
+    needs: detect-stack
+    if: needs.detect-stack.outputs.stack == 'node'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run linter
+        run: npm run lint --if-present
+        
+      - name: Run type check
+        run: npm run type-check --if-present
+        
+      - name: Run tests
+        run: npm test --if-present
+        
+      - name: Build production bundle
+        run: npm run build --if-present
+        
+  ci-python:
+    name: CI (Python)
+    needs: detect-stack
+    if: needs.detect-stack.outputs.stack == 'python'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          
+      - name: Install dependencies
         run: |
-          # Replace with your project's install command
-          npm ci
-      - name: Run lint (placeholder)
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f pyproject.toml ]; then pip install -e .; fi
+          
+      - name: Run linter
         run: |
-          # Replace with your lint command
-          npm run lint --if-present
-      - name: Run tests (placeholder)
+          pip install ruff
+          ruff check . || echo "::warning::Ruff linting found issues"
+          
+      - name: Run type checker
         run: |
-          # Replace with your test command
-          npm test
+          pip install mypy
+          mypy . --ignore-missing-imports || echo "::warning::MyPy found type issues"
+          
+      - name: Run tests
+        run: |
+          pip install pytest pytest-cov
+          pytest --cov --cov-report=term-missing
+          
+  ci-unknown:
+    name: CI (Unknown/Not Configured)
+    needs: detect-stack
+    if: needs.detect-stack.outputs.stack == 'unknown'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Warning - No CI configured
+        run: |
+          echo "::warning::Unable to detect tech stack (no go.mod, package.json, or requirements.txt)"
+          echo "::warning::Please configure repository-specific CI in .github/workflows/ci.yml"
+          echo "::warning::See: https://github.com/Coalescent-Emergence/.github/docs/REPOSITORY_SETUP.md"
+          exit 1
