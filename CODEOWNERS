@@ -1,0 +1,12 @@
+# CODEOWNERS — Solo founder default; expand later to teams as needed.
+# Format: <pattern> <owner>
+# Primary fallback owner for any path:
+* @jay13jay
+
+# Ownership for ADRs and architecture docs:
+docs/decisions/ @jay13jay
+
+# Add more scoped owners here as the org grows:
+# /infra/ @jay13jay
+# /api/ @jay13jay
+# /ui/ @jay13jay

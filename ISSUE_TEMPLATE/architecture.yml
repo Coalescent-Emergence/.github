@@ -1,0 +1,42 @@
+name: Architecture / ADR request
+about: Start an ADR or propose an architecture change. Use MADR conventions in docs/decisions/.
+title: '[ARCHITECTURE] '
+labels: ['type:architecture','status:triage','area:architecture']
+assignees: []
+body:
+- type: markdown
+  attributes:
+    value: |
+      Use this to propose, discuss, and author an ADR. Attach C4 context or links to diagram sources.
+- type: input
+  id: decision_title
+  attributes:
+    label: Decision title
+    required: true
+- type: textarea
+  id: context
+  attributes:
+    label: Context and problem statement
+    required: true
+- type: textarea
+  id: options
+  attributes:
+    label: Options considered (include pros/cons)
+    required: true
+- type: textarea
+  id: proposed_decision
+  attributes:
+    label: Proposed decision
+    required: true
+- type: textarea
+  id: fitness_functions
+  attributes:
+    label: Fitness functions / verification
+    description: How will we verify correctness of this decision?
+    required: true
+- type: input
+  id: adr_filename
+  attributes:
+    label: Suggested ADR filename
+    description: e.g., 0002-use-event-driven-comm.md
+    required: true

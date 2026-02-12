@@ -1,0 +1,54 @@
+name: Bug report — reproducible
+about: Report a bug with steps to reproduce, scope, and a suggested fix if known.
+title: '[BUG] '
+labels: ['type:bug','status:triage']
+assignees: []
+body:
+- type: markdown
+  attributes:
+    value: |
+      Provide a minimal reproducible example, expected vs actual behavior, severity, and tests to confirm the fix.
+- type: input
+  id: summary
+  attributes:
+    label: Short summary
+    description: One-line description of the bug.
+    required: true
+- type: textarea
+  id: environment
+  attributes:
+    label: Environment / steps to reproduce
+    description: OS, browser, API version, dataset, request body, exact steps.
+    required: true
+- type: textarea
+  id: expected
+  attributes:
+    label: Expected behavior
+    required: true
+- type: textarea
+  id: actual
+  attributes:
+    label: Actual behavior (with logs, stacktrace)
+    required: true
+- type: dropdown
+  id: severity
+  attributes:
+    label: Severity
+    options:
+      - P0 - production outage
+      - P1 - high impact
+      - P2 - moderate
+      - P3 - low / cosmetic
+    required: true
+- type: textarea
+  id: regression_test
+  attributes:
+    label: Regression test / acceptance
+    description: How we will verify the fix (unit/integration test, steps).
+    required: true
+- type: checkbox
+  id: ai_debug
+  attributes:
+    label: AI debug assistance
+    options:
+      - label: Yes, allow AI to suggest root causes and tests (advisory)

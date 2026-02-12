@@ -1,0 +1,73 @@
+name: PR validation
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  pr-linked-issue:
+    name: pr-linked-issue
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR body for linked issue
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const body = context.payload.pull_request && context.payload.pull_request.body || '';
+            const regex = /(Closes|Fixes)\s+#\d+/i;
+            if (!regex.test(body)) {
+              core.setFailed('PR must reference an issue using "Closes #<issue-number>" or "Fixes #<issue-number>".');
+            } else {
+              core.exportVariable('LINKED_ISSUE_FOUND', 'true');
+            }
+
+  ai-assist:
+    name: ai-assist
+    needs: pr-linked-issue
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Prepare AI context and call (advisory)
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          echo "Gathering PR context..."
+          # Minimal context: title + body
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_BODY="${{ github.event.pull_request.body }}"
+          PAYLOAD=$(jq -n --arg t "$PR_TITLE" --arg b "$PR_BODY" '{title:$t, body:$b}')
+          echo "$PAYLOAD" > /tmp/ai_input.json
+          # Sample advisory call (implementers should replace with a secure call)
+          # This step is intentionally non-blocking and advisory.
+          RESPONSE="{\"summary\":\"AI advisory placeholder\",\"confidence\":80}"
+          echo "$RESPONSE" > /tmp/ai_output.json
+      - name: Post AI advisory comment and label
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const out = JSON.parse(fs.readFileSync('/tmp/ai_output.json','utf8'));
+            const body = `**AI advisory (non-blocking)**\n\nSummary: ${out.summary}\n\nConfidence: ${out.confidence}%\n\n_This is advisory only — human review required._`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body,
+            });
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              labels: ['ai:suggestion'],
+            });

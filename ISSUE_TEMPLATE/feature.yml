@@ -1,0 +1,67 @@
+name: Feature request — vertical slice
+about: Propose a single vertical slice delivering measurable user value. Include acceptance criteria and AI decomposition request if desired.
+title: '[FEATURE] '
+labels: ['type:feature','status:triage','area:unspecified']
+assignees: []
+body:
+- type: markdown
+  attributes:
+    value: |
+      Use this template for a single vertical slice — small, testable, deployable.
+- type: input
+  id: summary
+  attributes:
+    label: Short summary
+    description: Concise one-line description of the feature.
+    placeholder: "Enable users to export data as CSV"
+    required: true
+- type: textarea
+  id: motivation
+  attributes:
+    label: User motivation / problem
+    description: Who benefits and why. Include user persona and success metric.
+    placeholder: "Users need to export report data to process offline; success = 80% of power-users export at least once."
+    required: true
+- type: textarea
+  id: acceptance_criteria
+  attributes:
+    label: Acceptance criteria (definitive, testable)
+    description: List clear pass/fail criteria, include API or UI checks, performance constraints, and observability.
+    placeholder: |
+      - Given X, when Y, then Z.
+      - E2E test: ...
+    required: true
+- type: dropdown
+  id: vertical_scope
+  attributes:
+    label: Vertical scope
+    options:
+      - UI
+      - API
+      - Full stack (UI + API + DB)
+      - Infra
+    description: Choose the minimal vertical slice to deliver value.
+    required: true
+- type: textarea
+  id: design_reference
+  attributes:
+    label: Architecture reference
+    description: Link supporting design notes, C4 diagram IDs, or ADRs (see docs/decisions/).
+    placeholder: "Link to README, design doc, or ADR"
+- type: checkbox
+  id: ai_decomposition
+  attributes:
+    label: AI decomposition requested
+    description: If checked, an advisory AI breakdown will be posted to the issue.
+    options:
+      - label: Yes, request an AI-assisted decomposition (advisory)
+- type: textarea
+  id: tasks
+  attributes:
+    label: Initial dev tasks (optional)
+    description: If you have an initial decomposition, paste it here.
+- type: textarea
+  id: risks
+  attributes:
+    label: Risks & open questions
+    description: List business or technical risks and required mitigations.

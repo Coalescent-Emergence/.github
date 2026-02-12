@@ -1,0 +1,29 @@
+name: ADR guard
+on:
+  pull_request:
+    paths:
+      - 'docs/decisions/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  adr-lint:
+    name: adr-lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Node 18 for markdownlint
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install markdownlint-cli
+        run: |
+          npm install -g markdownlint-cli@0.32.0
+      - name: Run markdownlint on ADRs
+        run: |
+          markdownlint "docs/decisions/**/*.md" || exit 1

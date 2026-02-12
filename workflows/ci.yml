@@ -1,0 +1,35 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Node 18 (placeholder)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install dependencies (placeholder)
+        run: |
+          # Replace with your project's install command
+          npm ci
+      - name: Run lint (placeholder)
+        run: |
+          # Replace with your lint command
+          npm run lint --if-present
+      - name: Run tests (placeholder)
+        run: |
+          # Replace with your test command
+          npm test

@@ -1,0 +1,43 @@
+name: Refactor / cleanup
+about: Describe a safe, reversible refactor. Avoid large scope—prefer small, testable commits.
+title: '[REFACTOR] '
+labels: ['type:refactor','status:triage','debt:technical']
+assignees: []
+body:
+- type: markdown
+  attributes:
+    value: |
+      Use for code health changes that improve maintainability without changing external behavior.
+- type: input
+  id: summary
+  attributes:
+    label: Short summary
+    required: true
+- type: textarea
+  id: scope
+  attributes:
+    label: Scope and files touched
+    description: Include the minimal file list and high-level plan.
+    required: true
+- type: textarea
+  id: before_after
+  attributes:
+    label: Behavioral before/after (must be identical)
+    required: true
+- type: textarea
+  id: tests
+  attributes:
+    label: Tests to verify no regression
+    description: Unit / integration tests and any smoke checks.
+    required: true
+- type: checkbox
+  id: adr_required
+  attributes:
+    label: ADR required?
+    options:
+      - label: Yes — if the refactor changes cross-cutting architecture or public API, create an ADR in docs/decisions/
+- type: textarea
+  id: rollback
+  attributes:
+    label: Rollback plan
+    description: How to revert if issues appear.
