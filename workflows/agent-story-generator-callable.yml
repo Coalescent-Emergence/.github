@@ -1,0 +1,75 @@
+name: AI Agent - Story Generator (callable)
+on:
+  workflow_call:
+    inputs:
+      owner:
+        required: true
+        type: string
+      repo:
+        required: true
+        type: string
+      issue_number:
+        required: true
+        type: string
+      issue_body:
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  generate-stories:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate stories (placeholder)
+        run: |
+          cat > stories.json << 'EOF'
+          {
+            "stories": [
+              {
+                "title": "User can perform action X",
+                "acceptance_criteria": ["Criterion 1", "Criterion 2"],
+                "complexity": "M",
+                "dependencies": [],
+                "test_strategy": "Integration tests",
+                "labels": ["type:feature", "effort:medium"]
+              }
+            ],
+            "confidence": 87,
+            "rationale": "Standard decomposition..."
+          }
+          EOF
+
+      - name: Post stories comment
+        uses: actions/github-script@v7
+        env:
+          OWNER: ${{ inputs.owner }}
+          REPO: ${{ inputs.repo }}
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
+        with:
+          script: |
+            const fs = require('fs');
+            const data = JSON.parse(fs.readFileSync('stories.json', 'utf8'));
+            let comment = `### 📝 Generated Stories (${data.stories.length})\n\n`;
+            comment += `**Confidence**: ${data.confidence}%\n\n`;
+
+            for (const story of data.stories) {
+              comment += `#### ${story.title}\n\n`;
+              comment += `**Complexity**: ${story.complexity}\n`;
+              comment += `**Acceptance Criteria**:\n`;
+              story.acceptance_criteria.forEach(ac => { comment += `- ${ac}\n`; });
+              comment += `\n**Test Strategy**: ${story.test_strategy}\n\n`;
+              comment += `**Suggested Labels**: ${story.labels.join(', ')}\n\n`;
+              comment += `---\n\n`;
+            }
+
+            comment += `\n**Rationale**: ${data.rationale}\n\n`;
+
+            await github.rest.issues.createComment({
+              owner: process.env.OWNER,
+              repo: process.env.REPO,
+              issue_number: parseInt(process.env.ISSUE_NUMBER, 10),
+              body: comment
+            });
