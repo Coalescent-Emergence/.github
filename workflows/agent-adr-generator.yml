@@ -45,10 +45,12 @@ jobs:
           
       - name: Generate ADR draft
         id: generate
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          # Placeholder for OpenAI API call with ADR generator prompt
+          # NOTE: This workflow does not call external LLMs.
+          # Use GitHub Copilot interactively with the prompt template at
+          # .github/agents/adr-generator/prompt.md to produce ADR drafts.
+          # The draft below is a deterministic placeholder; replace it
+          # with a Copilot-generated, human-reviewed draft when ready.
           cat > adr-draft.md << 'EOF'
           # ${{ steps.number.outputs.next_number }}. Example Architecture Decision
           
@@ -60,11 +62,11 @@ jobs:
           
           ## Context
           
-          [AI would fill this based on issue description]
+          [Copilot-assisted draft: fill this from the issue description]
           
           ## Decision
           
-          [AI would generate decision and rationale]
+          [Copilot-assisted decision and rationale]
           
           ## Consequences
           

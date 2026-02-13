@@ -48,13 +48,14 @@ delete_label() {
 echo "📦 Step 1: Remove deprecated labels..."
 echo ""
 
-delete_label "type:chore"
-delete_label "area:infra"
-delete_label "area:api"
-delete_label "area:ui"
-delete_label "ai:suggestion"
-delete_label "ai:reviewed"
-delete_label "status:review"
+# already removed, kept for example of how to delete if needed in the future
+# delete_label "type:chore"
+# delete_label "area:infra"
+# delete_label "area:api"
+# delete_label "area:ui"
+# delete_label "ai:suggestion"
+# delete_label "ai:reviewed"
+# delete_label "status:review"
 
 echo ""
 echo "🎨 Step 2: Create/update TYPE labels..."

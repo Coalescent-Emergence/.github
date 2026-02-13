@@ -53,17 +53,15 @@ jobs:
           
       - name: Analyze PR against ADRs
         id: analyze
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          # Placeholder - actual implementation would:
-          # 1. Load all ADRs (org + repo level)
-          # 2. Analyze PR diff
-          # 3. Call OpenAI API with Architecture Guardian prompt
-          # 4. Detect violations
-          
-          echo "AI agent would check PR diff against ADRs"
-          
+          # NOTE: This workflow does not call external LLMs.
+          # Use GitHub Copilot interactively (see .github/agents/architecture-guardian/prompt.md)
+          # to review PR diffs against ADRs. This step provides a deterministic
+          # placeholder analysis that should be replaced by a Copilot-assisted,
+          # human-reviewed result when available.
+
+          echo "Architecture Guardian would check PR diff against ADRs (placeholder)"
+
           # Mock output
           cat > analysis.json << 'EOF'
           {

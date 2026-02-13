@@ -20,12 +20,14 @@ jobs:
         run: |
           echo "Processing feature for story generation"
           
-      - name: Generate stories
+      - name: Generate stories (Copilot guidance)
         id: generate
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          # Placeholder - actual implementation would call OpenAI with story-generator prompt
+          # NOTE: This workflow does not call external LLMs.
+          # Use GitHub Copilot interactively with the prompt at
+          # .github/agents/story-generator/prompt.md to produce story drafts.
+          # The file below is a placeholder; replace it with a Copilot-assisted,
+          # human-reviewed stories.json when ready.
           cat > stories.json << 'EOF'
           {
             "stories": [

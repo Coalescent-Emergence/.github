@@ -38,9 +38,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Prepare AI context and call (advisory)
+      - name: Prepare AI context and advisory (Copilot guidance)
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REPO: ${{ github.repository }}
         run: |
@@ -50,9 +49,11 @@ jobs:
           PR_BODY="${{ github.event.pull_request.body }}"
           PAYLOAD=$(jq -n --arg t "$PR_TITLE" --arg b "$PR_BODY" '{title:$t, body:$b}')
           echo "$PAYLOAD" > /tmp/ai_input.json
-          # Sample advisory call (implementers should replace with a secure call)
-          # This step is intentionally non-blocking and advisory.
-          RESPONSE="{\"summary\":\"AI advisory placeholder\",\"confidence\":80}"
+          # NOTE: This step does not call external LLMs. Use GitHub Copilot
+          # interactively (or in Codespaces) with the prompt at
+          # .github/agents/pr-advisor/prompt.md for an advisory summary.
+          # The placeholder below remains non-blocking and advisory.
+          RESPONSE="{\"summary\":\"AI advisory placeholder (use Copilot for richer suggestions)\",\"confidence\":80}"
           echo "$RESPONSE" > /tmp/ai_output.json
       - name: Post AI advisory comment and label
         uses: actions/github-script@v8

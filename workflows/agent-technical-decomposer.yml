@@ -29,13 +29,14 @@ jobs:
             echo "tech_stack=Unknown" >> $GITHUB_OUTPUT
           fi
           
-      - name: Decompose into tasks
+      - name: Decompose into tasks (Copilot guidance)
         id: decompose
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          TECH_STACK: ${{ steps.detect.outputs.tech_stack }}
         run: |
-          # Placeholder for OpenAI API call
+          # NOTE: This workflow does not call external LLMs.
+          # Use GitHub Copilot interactively with the prompt at
+          # .github/agents/technical-decomposer/prompt.md to create a
+          # task breakdown for the detected tech stack.
+          # The JSON below is a deterministic placeholder for review.
           cat > tasks.json << 'EOF'
           {
             "tasks": [

@@ -22,18 +22,14 @@ jobs:
           echo "repository=${{ github.repository }}" >> $GITHUB_OUTPUT
           echo "issue_number=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
           
-      - name: Call OpenAI API for MVP decomposition
+      - name: Produce MVP decomposition (Copilot guidance)
         id: clarify
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          ISSUE_BODY: ${{ github.event.issue.body }}
         run: |
-          # This is a placeholder - actual implementation would call OpenAI API
-          # with the system prompt from agents/mvp-clarifier/prompt.md
-          echo "AI agent would analyze issue and generate structured MVP stories"
-          echo "For production: Use OpenAI SDK to call GPT-4 with prompt template"
-          
-          # Mock output for now
+          # NOTE: This workflow does not call external LLMs.
+          # Use GitHub Copilot interactively with .github/agents/mvp-clarifier/prompt.md
+          # to generate structured MVP stories. The JSON below is a placeholder
+          # and should be replaced with a Copilot-assisted, human-reviewed result.
+
           cat > response.json << 'EOF'
           {
             "stories": [

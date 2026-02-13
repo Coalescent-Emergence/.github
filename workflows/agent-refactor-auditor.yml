@@ -37,10 +37,13 @@ jobs:
           
       - name: Analyze refactor risks
         id: analyze
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          # Placeholder for OpenAI API call with refactor auditor prompt
+          # NOTE: This workflow does not call external LLMs.
+          # Use GitHub Copilot interactively (or in Codespaces) with the
+          # prompt template at .github/agents/refactor-auditor/prompt.md
+          # to generate an advisory audit. The step below provides a
+          # deterministic/mock audit for CI-comments and can be replaced
+          # with a human-reviewed Copilot suggestion persisted to audit.json.
           cat > audit.json << 'EOF'
           {
             "regression_risks": [
