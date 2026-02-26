@@ -46,6 +46,7 @@ AI usage patterns
 - Always require human approval for any code or ADR changes.
 - Use AI outputs to seed tasks and tests, not to auto-merge.
 - Store AI-generated artifacts as comments or issue bodies for traceability.
+- Execution Boundaries: For infrastructure repositories, always verify the intended execution environment (e.g., Docker, DevContainer, Makefile wrappers) before suggesting CLI commands. Assume direct host execution is forbidden unless explicitly stated.
 
 Example outputs & schema
 - For decomposition: { "tasks": [{"id":"T1","title":"...","estimate":"...","depends_on":[] }], "tests":[...], "confidence": 72 }
