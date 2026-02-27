@@ -1,8 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Coalescent-Emergence/.github/agents/refactor-auditor/schema.json",
   "title": "Refactor Auditor Output Schema",
   "type": "object",
-  "required": ["regression_risks", "test_coverage", "smoke_test_steps", "confidence"],
+  "required": ["regression_risks", "test_coverage", "smoke_test_steps", "confidence", "rationale", "handoff_next"],
   "properties": {
     "regression_risks": {
       "type": "array",
@@ -49,6 +50,10 @@
       "type": "integer",
       "minimum": 0,
       "maximum": 100
+    },
+    "rationale": { "type": "string" },
+    "handoff_next": {
+      "$ref": "../_shared/project-handoff-schema.json#/$defs/HandoffNext"
     }
   }
 }

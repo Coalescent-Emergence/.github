@@ -1,8 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Coalescent-Emergence/.github/agents/technical-decomposer/schema.json",
   "title": "Technical Decomposer Output Schema",
   "type": "object",
-  "required": ["tasks", "tests", "confidence"],
+  "required": ["tasks", "tests", "confidence", "rationale", "handoff_next"],
   "properties": {
     "tasks": {
       "type": "array",
@@ -57,6 +58,9 @@
       "minimum": 0,
       "maximum": 100
     },
-    "rationale": { "type": "string" }
+    "rationale": { "type": "string" },
+    "handoff_next": {
+      "$ref": "../_shared/project-handoff-schema.json#/$defs/HandoffNext"
+    }
   }
 }

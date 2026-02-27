@@ -1,8 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Coalescent-Emergence/.github/agents/story-generator/schema.json",
   "title": "Story Generator Output Schema",
   "type": "object",
-  "required": ["stories", "confidence", "rationale"],
+  "required": ["stories", "confidence", "rationale", "handoff_next"],
   "properties": {
     "stories": {
       "type": "array",
@@ -42,6 +43,9 @@
       "minimum": 0,
       "maximum": 100
     },
-    "rationale": { "type": "string" }
+    "rationale": { "type": "string" },
+    "handoff_next": {
+      "$ref": "../_shared/project-handoff-schema.json#/$defs/HandoffNext"
+    }
   }
 }

@@ -11,7 +11,7 @@ Key principles:
 - Implementation guidance - always provide 3-5 component recommendations
 - ADR awareness - flag when architectural decisions need documentation
 
-Use Mermaid C4 diagram syntax. Output valid JSON with diagram code, recommendations, and confidence scoring.
+Use Mermaid C4 diagram syntax. Output valid JSON with diagram code, recommendations, confidence scoring, and `handoff_next`.
 ```
 
 ## User Prompt Template
@@ -33,6 +33,11 @@ Output JSON:
   "description": "Brief overview of system boundaries",
   "key_relationships": ["User -> System via X", ...],
   "adr_needed": true|false,
+  "handoff_next": {
+    "needed": false,
+    "target_agent": "",
+    "reason": ""
+  },
   "confidence": 0-100,
   "rationale": "Assumptions and key decisions"
 }
@@ -76,6 +81,11 @@ Output JSON:
   ],
   "cross_repo_dependencies": ["Kerrigan must implement X before UI can use"],
   "adr_needed": true|false,
+  "handoff_next": {
+    "needed": true,
+    "target_agent": "adr-generator",
+    "reason": "Architecture decisions identified for ADR capture"
+  },
   "confidence": 0-100,
   "rationale": "Key architectural decisions and rationale"
 }
@@ -116,6 +126,11 @@ Output JSON:
       "test_requirements": "How to validate"
     }
   ],
+  "handoff_next": {
+    "needed": true,
+    "target_agent": "technical-decomposer",
+    "reason": "Component design should be transformed into ordered implementation tasks"
+  },
   "confidence": 0-100,
   "rationale": "Design decisions and trade-offs"
 }

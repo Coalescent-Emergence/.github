@@ -1,8 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Coalescent-Emergence/.github/agents/adr-generator/schema.json",
   "title": "ADR Generator Output Schema",
   "type": "object",
-  "required": ["adr_content", "filename", "target_path", "confidence"],
+  "required": ["adr_content", "filename", "target_path", "confidence", "rationale", "handoff_next"],
   "properties": {
     "adr_content": {
       "type": "string",
@@ -26,5 +27,9 @@
       "maximum": 100
     },
     "rationale": { "type": "string" }
+    ,
+    "handoff_next": {
+      "$ref": "../_shared/project-handoff-schema.json#/$defs/HandoffNext"
+    }
   }
 }

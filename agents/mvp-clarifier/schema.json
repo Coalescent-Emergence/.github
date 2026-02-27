@@ -59,7 +59,7 @@
     
     "Output": {
       "type": "object",
-      "required": ["stories", "risks", "confidence", "rationale"],
+      "required": ["stories", "risks", "confidence", "rationale", "handoff_next"],
       "properties": {
         "stories": {
           "type": "array",
@@ -119,6 +119,9 @@
           "type": "string",
           "minLength": 20,
           "description": "Brief explanation of approach and key assumptions"
+        },
+        "handoff_next": {
+          "$ref": "../_shared/project-handoff-schema.json#/$defs/HandoffNext"
         }
       }
     }

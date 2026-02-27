@@ -11,7 +11,7 @@ Key principles:
 - Risk awareness - call out what's being deferred and why
 - Confidence scoring - be honest about uncertainty
 
-Always output valid JSON matching the provided schema. Include a confidence score (0-100) and brief rationale explaining your assumptions.
+Always output valid JSON matching the provided schema. Include a confidence score (0-100), brief rationale explaining assumptions, and `handoff_next` for downstream routing.
 ```
 
 ## User Prompt Template
@@ -40,6 +40,11 @@ Output JSON with this structure:
     }
   ],
   "risks": ["potential blocker or unknown"],
+  "handoff_next": {
+    "needed": true,
+    "target_agent": "story-generator",
+    "reason": "MVP stories should be expanded into atomic implementation stories"
+  },
   "confidence": 0-100,
   "rationale": "Brief explanation of approach and assumptions"
 }

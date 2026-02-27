@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Coalescent-Emergence/.github/agents/_shared/handoff-schema.json",
+  "title": "Agent Handoff Schema",
+  "description": "Reusable schema definitions for inter-agent delegation and escalation.",
+  "$defs": {
+    "EvidenceItem": {
+      "type": "object",
+      "required": ["source", "finding"],
+      "properties": {
+        "source": { "type": "string", "minLength": 2 },
+        "finding": { "type": "string", "minLength": 2 }
+      },
+      "additionalProperties": false
+    },
+    "HandoffContext": {
+      "type": "object",
+      "required": ["symptom", "environment", "evidence_gathered", "layers_cleared", "hypothesis"],
+      "properties": {
+        "symptom": { "type": "string", "minLength": 5 },
+        "environment": { "type": "string", "enum": ["local", "cluster", "both", "ci"] },
+        "affected_components": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "recent_changes": { "type": "string" },
+        "error_text": { "type": "string" },
+        "evidence_gathered": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/EvidenceItem" }
+        },
+        "layers_cleared": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "hypothesis": { "type": "string", "minLength": 5 }
+      },
+      "additionalProperties": false
+    },
+    "HandoffInput": {
+      "type": "object",
+      "required": ["from_agent", "to_agent", "reason", "priority", "context"],
+      "properties": {
+        "from_agent": { "type": "string", "minLength": 2 },
+        "to_agent": { "type": "string", "minLength": 2 },
+        "reason": { "type": "string", "minLength": 5 },
+        "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+        "context": { "$ref": "#/$defs/HandoffContext" }
+      },
+      "additionalProperties": false
+    },
+    "Escalation": {
+      "type": "object",
+      "required": ["needed", "direction", "target_agent", "reason", "context_to_pass"],
+      "properties": {
+        "needed": { "type": "boolean" },
+        "direction": { "type": "string", "enum": ["up", "down", "lateral", "lifecycle", "none"] },
+        "target_agent": { "type": "string" },
+        "reason": { "type": "string" },
+        "context_to_pass": {
+          "type": "object",
+          "properties": {
+            "evidence_gathered": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/EvidenceItem" },
+              "default": []
+            },
+            "layers_cleared": {
+              "type": "array",
+              "items": { "type": "string" },
+              "default": []
+            },
+            "current_best_hypothesis": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "LifecycleHandoff": {
+      "type": "object",
+      "required": ["needed", "suggested_agent", "justification"],
+      "properties": {
+        "needed": { "type": "boolean" },
+        "suggested_agent": {
+          "type": "string",
+          "enum": [
+            "project-manager",
+            "mvp-clarifier",
+            "c4-architect",
+            "story-generator",
+            "technical-decomposer",
+            "architecture-guardian",
+            "adr-generator",
+            "refactor-auditor",
+            "none"
+          ]
+        },
+        "justification": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

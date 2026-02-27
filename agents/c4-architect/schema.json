@@ -7,7 +7,7 @@
   "definitions": {
     "BaseOutput": {
       "type": "object",
-      "required": ["diagram_type", "mermaid_code", "confidence", "rationale"],
+      "required": ["diagram_type", "mermaid_code", "confidence", "rationale", "handoff_next"],
       "properties": {
         "diagram_type": {
           "type": "string",
@@ -30,6 +30,9 @@
           "type": "string",
           "minLength": 20,
           "description": "Key architectural decisions and assumptions"
+        },
+        "handoff_next": {
+          "$ref": "../_shared/project-handoff-schema.json#/$defs/HandoffNext"
         }
       }
     },

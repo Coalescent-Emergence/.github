@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Coalescent-Emergence/.github/agents/software-architect/schema.json",
+  "title": "Software Architect Output Schema",
+  "type": "object",
+  "required": ["failing_layer", "root_cause", "affected_repos", "evidence", "fix_approach", "verification", "suggested_specialist", "escalation", "lifecycle_handoff", "confidence", "rationale"],
+  "properties": {
+    "failing_layer": {
+      "type": "string",
+      "enum": ["api_contract", "data_flow", "business_logic", "dependency_integration", "architecture_compliance"]
+    },
+    "root_cause": { "type": "string", "minLength": 10 },
+    "affected_repos": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "evidence": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "fix_approach": { "type": "string", "minLength": 10 },
+    "verification": { "type": "string", "minLength": 5 },
+    "suggested_specialist": {
+      "type": "string",
+      "enum": ["go-specialist", "python-specialist", "javascript-specialist", "iac-specialist", "shell-specialist", "dsa-specialist", "none"]
+    },
+    "escalation": {
+      "$ref": "../_shared/handoff-schema.json#/$defs/Escalation"
+    },
+    "lifecycle_handoff": {
+      "$ref": "../_shared/handoff-schema.json#/$defs/LifecycleHandoff"
+    },
+    "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "rationale": { "type": "string", "minLength": 10 }
+  },
+  "additionalProperties": false
+}

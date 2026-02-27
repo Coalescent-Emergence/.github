@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Coalescent-Emergence/.github/agents/_shared/project-handoff-schema.json",
+  "title": "Project Agent Handoff Schema",
+  "$defs": {
+    "EvidenceItem": {
+      "type": "object",
+      "required": ["source", "finding"],
+      "properties": {
+        "source": { "type": "string", "minLength": 2 },
+        "finding": { "type": "string", "minLength": 2 }
+      },
+      "additionalProperties": false
+    },
+    "ProjectContext": {
+      "type": "object",
+      "required": ["problem_summary", "affected_repos", "constraints", "evidence_gathered", "recommended_outcome"],
+      "properties": {
+        "problem_summary": { "type": "string", "minLength": 10 },
+        "affected_repos": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "constraints": { "type": "array", "items": { "type": "string" } },
+        "evidence_gathered": { "type": "array", "items": { "$ref": "#/$defs/EvidenceItem" } },
+        "recommended_outcome": { "type": "string", "minLength": 8 }
+      },
+      "additionalProperties": false
+    },
+    "ProjectHandoffInput": {
+      "type": "object",
+      "required": ["from_agent", "to_agent", "reason", "priority", "context"],
+      "properties": {
+        "from_agent": { "type": "string" },
+        "to_agent": { "type": "string" },
+        "reason": { "type": "string", "minLength": 5 },
+        "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+        "context": { "$ref": "#/$defs/ProjectContext" }
+      },
+      "additionalProperties": false
+    },
+    "HandoffNext": {
+      "type": "object",
+      "required": ["needed", "target_agent", "reason"],
+      "properties": {
+        "needed": { "type": "boolean" },
+        "target_agent": { "type": "string" },
+        "reason": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
+}
