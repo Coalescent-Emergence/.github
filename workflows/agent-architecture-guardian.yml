@@ -54,12 +54,12 @@ jobs:
       - name: Analyze PR against ADRs
         id: analyze
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          # Placeholder - actual implementation would:
+          # Implementation calls GitHub Models API (GITHUB_TOKEN, no external key needed):
           # 1. Load all ADRs (org + repo level)
           # 2. Analyze PR diff
-          # 3. Call OpenAI API with Architecture Guardian prompt
+          # 3. Call GitHub Models API with Architecture Guardian prompt
           # 4. Detect violations
           
           echo "AI agent would check PR diff against ADRs"

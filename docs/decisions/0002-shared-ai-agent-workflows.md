@@ -23,7 +23,7 @@ Key constraints:
 
 * DRY principle: 7 agents × 5 repositories = 35 workflow files if repo-specific (high maintenance)
 * Consistency: Agent behavior should be identical across all repos (same prompts, schemas)
-* Secrets management: `OPENAI_API_KEY` should be organization secret, not repository secret
+* Secrets management: CI/CD agents use the built-in `GITHUB_TOKEN` for GitHub Models API — no external AI key needed
 * Governance: Agents enforce organization-wide patterns (labels, ADRs, issue templates)
 * Future extensibility: Adding new repository should automatically inherit all agents
 
@@ -42,7 +42,7 @@ Chosen option: "Org-level workflows in `.github/.github/workflows/`", because Gi
 
 * Good, because single source of truth for all agent implementations (7 workflows, not 35)
 * Good, because adding new repository immediately inherits all agent functionality
-* Good, because organization-level `OPENAI_API_KEY` secret accessible to all workflows
+* Good, because organization-level `GITHUB_TOKEN` (built-in) is accessible to all workflows with no secret management overhead
 * Good, because agent documentation (prompts, schemas) lives with implementation in `.github/agents/`
 * Good, because updates to agent logic apply to all repositories instantly
 * Bad, because workflows must handle multi-repo context (different tech stacks, file structures)

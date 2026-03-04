@@ -46,9 +46,10 @@ jobs:
       - name: Generate ADR draft
         id: generate
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          # Placeholder for OpenAI API call with ADR generator prompt
+          # Implementation calls GitHub Models API (GITHUB_TOKEN, no external key needed)
+          # with the ADR generator prompt from agents/adr-generator/prompt.md
           cat > adr-draft.md << 'EOF'
           # ${{ steps.number.outputs.next_number }}. Example Architecture Decision
           

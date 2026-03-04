@@ -73,7 +73,7 @@
 ## Secrets & Environments
 
 ### Current (Solo Founder)
-- **Repository Secret**: `OPENAI_API_KEY` (for AI advisory in PRs)
+- **No external AI API keys** — CI/CD automation uses `GITHUB_TOKEN` (built-in) for GitHub Models API
 
 ### When Deploying (Production)
 - **Environment**: `production` with required reviewer (@jay13jay)

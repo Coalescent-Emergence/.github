@@ -121,8 +121,8 @@ Navigate to: **Settings → Collaborators and teams**
 Navigate to: **Settings → Secrets and variables → Actions**
 
 ### Repository Secrets (Current)
-- `OPENAI_API_KEY` - Used by .github/workflows/pr-validation.yml for AI advisory comments
-  - Scope: Repository secrets (not environment-specific)
+- No external AI API keys are stored. CI/CD agent workflows use the built-in `GITHUB_TOKEN` to access GitHub Models API.
+- Cluster infrastructure secrets (e.g., `KUBECONFIG`, `REGISTRY_TOKEN`) are environment-scoped (see Environments below).
   - Access: Workflows running on same-repo PRs only (fork PRs blocked)
 
 ### When Deploying to Staging/Production
@@ -283,7 +283,7 @@ After configuring settings, verify:
 - [ ] Dependabot alerts enabled
 - [ ] Secret scanning enabled (if license allows)
 - [ ] Workflow default permissions set to `contents: read`
-- [ ] `OPENAI_API_KEY` stored in repository secrets
+- [ ] No external AI API keys in repository secrets (CI/CD agents use `GITHUB_TOKEN`)
 - [ ] Settings match CHANGELOG_PERMISSIONS.md audit requirements
 
 ---

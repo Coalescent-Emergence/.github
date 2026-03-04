@@ -1,0 +1,108 @@
+name: Security scanning
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+  schedule:
+    # Weekly full scan every Monday at 08:00 UTC
+    - cron: '0 8 * * 1'
+
+permissions:
+  contents: read
+  security-events: write  # Required to upload SARIF results to GitHub Security tab
+
+jobs:
+  detect-stack:
+    name: Detect tech stack
+    runs-on: ubuntu-latest
+    outputs:
+      stack: ${{ steps.detect.outputs.stack }}
+      codeql_language: ${{ steps.detect.outputs.codeql_language }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: detect
+        run: |
+          if [ -f "go.mod" ]; then
+            echo "stack=go" >> $GITHUB_OUTPUT
+            echo "codeql_language=go" >> $GITHUB_OUTPUT
+          elif [ -f "package.json" ]; then
+            echo "stack=node" >> $GITHUB_OUTPUT
+            echo "codeql_language=javascript-typescript" >> $GITHUB_OUTPUT
+          elif [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+            echo "stack=python" >> $GITHUB_OUTPUT
+            echo "codeql_language=python" >> $GITHUB_OUTPUT
+          else
+            echo "stack=unknown" >> $GITHUB_OUTPUT
+            echo "codeql_language=" >> $GITHUB_OUTPUT
+          fi
+
+  codeql:
+    name: CodeQL SAST
+    needs: detect-stack
+    if: needs.detect-stack.outputs.codeql_language != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ needs.detect-stack.outputs.codeql_language }}
+          queries: security-extended
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:${{ needs.detect-stack.outputs.codeql_language }}
+
+  govulncheck:
+    name: Go vulnerability scan
+    needs: detect-stack
+    if: needs.detect-stack.outputs.stack == 'go'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+      - name: Run govulncheck
+        uses: golang/govulncheck-action@v1
+        with:
+          go-version-input: '1.23'
+
+  npm-audit:
+    name: npm dependency audit
+    needs: detect-stack
+    if: needs.detect-stack.outputs.stack == 'node'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - name: Audit dependencies (fail on high/critical)
+        run: npm audit --audit-level=high
+
+  pip-audit:
+    name: Python dependency audit
+    needs: detect-stack
+    if: needs.detect-stack.outputs.stack == 'python'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pip-audit
+        run: pip install pip-audit
+      - name: Audit dependencies
+        run: |
+          if [ -f requirements.txt ]; then pip-audit -r requirements.txt; fi
+          if [ -f pyproject.toml ]; then pip-audit .; fi

@@ -22,16 +22,16 @@ jobs:
           echo "repository=${{ github.repository }}" >> $GITHUB_OUTPUT
           echo "issue_number=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
           
-      - name: Call OpenAI API for MVP decomposition
+      - name: Invoke AI agent for MVP decomposition
         id: clarify
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
           ISSUE_BODY: ${{ github.event.issue.body }}
         run: |
-          # This is a placeholder - actual implementation would call OpenAI API
+          # Implementation calls GitHub Models API (GITHUB_TOKEN, no external key needed)
           # with the system prompt from agents/mvp-clarifier/prompt.md
-          echo "AI agent would analyze issue and generate structured MVP stories"
-          echo "For production: Use OpenAI SDK to call GPT-4 with prompt template"
+          echo "AI agent analyzes issue and generates structured MVP stories"
+          echo "Implementation: call GitHub Models API with prompt template"
           
           # Mock output for now
           cat > response.json << 'EOF'

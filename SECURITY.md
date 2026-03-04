@@ -10,8 +10,8 @@ Response expectations
 
 Secret handling
 - Never commit secrets, credentials, or private keys to the repository.
-- Store third-party API keys (e.g., `OPENAI_API_KEY`) in repository secrets or org secrets.
 - Workflows must not expose secrets to forked PRs. AI steps run only when the PR originates from the same repository.
+- **No external AI API keys** (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, or equivalents) are stored in repository or org secrets. CI/CD automation agents use **GitHub Models API** via the built-in `GITHUB_TOKEN`. Production services use cluster-internal inference endpoints only. See [ADR-0005](../mvp-control-plane/docs/decisions/ADR-0005-local-only-inference-policy.md).
 
 Dependency management
 - Dependabot is enabled to open PRs for dependency updates.

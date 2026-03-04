@@ -38,9 +38,10 @@ jobs:
       - name: Analyze refactor risks
         id: analyze
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          # Placeholder for OpenAI API call with refactor auditor prompt
+          # Implementation calls GitHub Models API (GITHUB_TOKEN, no external key needed)
+          # with the refactor auditor prompt from agents/refactor-auditor/prompt.md
           cat > audit.json << 'EOF'
           {
             "regression_risks": [

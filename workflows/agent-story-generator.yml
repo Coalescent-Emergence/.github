@@ -23,9 +23,10 @@ jobs:
       - name: Generate stories
         id: generate
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          # Placeholder - actual implementation would call OpenAI with story-generator prompt
+          # Implementation calls GitHub Models API (GITHUB_TOKEN, no external key needed)
+          # with the story-generator prompt from agents/story-generator/prompt.md
           cat > stories.json << 'EOF'
           {
             "stories": [

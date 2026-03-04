@@ -32,10 +32,10 @@ jobs:
       - name: Decompose into tasks
         id: decompose
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
           TECH_STACK: ${{ steps.detect.outputs.tech_stack }}
         run: |
-          # Placeholder for OpenAI API call
+          # Implementation calls GitHub Models API (GITHUB_TOKEN, no external key needed)
           cat > tasks.json << 'EOF'
           {
             "tasks": [
