@@ -75,6 +75,7 @@ coalescent-emergence/
 Separate repositories:
 - `Coalescent-Emergence/.github` (organization defaults)
 - `Coalescent-Emergence/Kerrigan` (backend)
+- `Coalescent-Emergence/kerrigan-landing-page` (public marketing / waitlist site)
 - `Coalescent-Emergence/UI` (web frontend)
 - `Coalescent-Emergence/Whisper-STT` (ML service)
 - `Coalescent-Emergence/MCP-*` (protocol servers)

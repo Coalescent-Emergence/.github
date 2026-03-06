@@ -7,7 +7,7 @@ Check pull requests against organizational and repository-level ADRs to identify
 Architecture reviewer referencing documented decisions to maintain consistency and catch drift early.
 
 ## Trigger
-- **Automatic**: Runs on all PRs via [GitHub Actions workflow](../../workflows/agent-architecture-guardian.yml)
+- **Automatic**: Runs on all PRs via [GitHub Actions workflow](../../repo-meta/workflows/agent-architecture-guardian.yml)
 - **Manual**: Can be invoked by `ai:review` label on PRs
 
 ## Inputs
@@ -99,7 +99,7 @@ Org-level ADRs apply to all repos. Example:
 - PR in UI repository checked against `.github/docs/decisions/0003-layered-service-architecture.md` (org-wide) and `UI/docs/decisions/*.md` (UI-specific)
 
 ## Integration
-- Auto-runs via [workflow](../../workflows/agent-architecture-guardian.yml) on PR creation/update
+- Auto-runs via [workflow](../../repo-meta/workflows/agent-architecture-guardian.yml) on PR creation/update
 - Parses MADR-style ADRs using [ADR template](../../docs/decisions/template.md)
 - Posts results as PR review comment
 - Links to specific files and line numbers in violations

@@ -166,7 +166,7 @@ Tech Stack: Go 1.23, Chi router, pgx (PostgreSQL), golang-jwt/jwt
 
 ## Integration
 - References code structure from repository architecture.md
-- Links to [CI workflow](../../workflows/ci.yml) for automation
+- Links to [CI workflow](../../repo-meta/workflows/ci.yml) for automation
 - Can trigger issue sub-tasks if `create_subtasks: true`
 - Coordinates with [Story Generator](../agents/story-generator/) output
 

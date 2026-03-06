@@ -19,7 +19,9 @@ jobs:
           REPO_NAME="${{ github.repository }}"
           
           # Simple heuristic - in production, would inspect actual repo structure
-          if [[ "$REPO_NAME" == *"Kerrigan"* ]]; then
+          if [[ "$REPO_NAME" == *"kerrigan-landing-page"* ]]; then
+            echo "tech_stack=Hugo/Static" >> $GITHUB_OUTPUT
+          elif [[ "$REPO_NAME" == *"Kerrigan"* ]]; then
             echo "tech_stack=Go" >> $GITHUB_OUTPUT
           elif [[ "$REPO_NAME" == *"UI"* ]]; then
             echo "tech_stack=TypeScript/React" >> $GITHUB_OUTPUT

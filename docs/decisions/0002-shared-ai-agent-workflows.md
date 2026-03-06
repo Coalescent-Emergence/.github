@@ -122,5 +122,5 @@ Decision is correct if:
 * [GitHub Organization Workflows](https://docs.github.com/en/actions/using-workflows/sharing-workflows-secrets-and-runners-with-your-organization)
 * [AI_PLAYBOOK.md](../../AI_PLAYBOOK.md) - Agent role definitions
 * [agents/](../../agents/) - Agent documentation and schemas
-* Implementation: See [workflows/](../../workflows/) for 7 agent workflows
+* Implementation: See [repo-meta/workflows/](../../repo-meta/workflows/) for 7 agent workflows
 * Related: [ADR-0001: Multi-Repository Architecture](./0001-multi-repo-architecture.md)
