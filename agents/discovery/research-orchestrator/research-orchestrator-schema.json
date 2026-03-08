@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Coalescent-Emergence/.github/agents/discovery/research-orchestrator/research-orchestrator-schema.json",
+  "title": "Research Orchestrator Output Schema",
+  "type": "object",
+  "required": [
+    "research_frame",
+    "delegation_plan",
+    "findings_expected",
+    "confidence",
+    "rationale",
+    "handoff_next"
+  ],
+  "properties": {
+    "research_frame": {
+      "type": "object",
+      "required": ["topic", "target_repos", "key_questions"],
+      "properties": {
+        "topic": { "type": "string" },
+        "target_repos": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "key_questions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "delegation_plan": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["step", "target_agent", "goal"],
+        "properties": {
+          "step": { "type": "integer" },
+          "target_agent": { "type": "string" },
+          "goal": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "findings_expected": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    },
+    "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "rationale": { "type": "string", "minLength": 12 },
+    "handoff_next": {
+      "$ref": "../../_shared/project-handoff-schema.json#/$defs/HandoffNext"
+    }
+  },
+  "additionalProperties": false
+}

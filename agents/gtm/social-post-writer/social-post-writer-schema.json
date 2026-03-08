@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Coalescent-Emergence/.github/agents/social-post-writer/social-post-writer-schema.json",
+  "title": "Social Post Writer Input/Output Schema",
+  "description": "Schema for the social-post-writer agent. Generates LinkedIn/Facebook post sets in the founder's voice for Kerrigan GTM content.",
+
+  "$defs": {
+
+    "Archetype": {
+      "type": "string",
+      "enum": ["origin_story", "problem_illumination", "villain_framing", "build_in_public", "social_proof", "product_demo", "contrarian_take", "direct_cta"],
+      "description": "Content archetype. A5 (social_proof) and A6 (product_demo) require unlock conditions to be met."
+    },
+
+    "Stage": {
+      "type": "string",
+      "enum": ["early_warm_up", "authority_building", "proof_stage"]
+    },
+
+    "PostStatus": {
+      "type": "string",
+      "enum": ["draft", "scheduled", "live", "archived"]
+    },
+
+    "Platform": {
+      "type": "string",
+      "enum": ["linkedin", "facebook"]
+    },
+
+    "Input": {
+      "type": "object",
+      "required": ["mode", "set_id", "current_post_count"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["set", "single"],
+          "description": "set = 5-post arc; single = one post"
+        },
+        "set_id": {
+          "type": "string",
+          "pattern": "^SET-\\d{3}$",
+          "description": "e.g. SET-001. Must match next available ID in social/README.md Set Index."
+        },
+        "current_post_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total live posts published so far. Drives content stage gating."
+        },
+        "context": {
+          "type": "string",
+          "description": "Optional. Pasted URL or short note for timely hook. Omit to draw from product docs only."
+        },
+        "context_docs_loaded": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of context doc paths loaded before invocation."
+        }
+      }
+    },
+
+    "SetManifestPost": {
+      "type": "object",
+      "required": ["position", "archetype", "topic", "experiment_feeds", "suggested_filename"],
+      "properties": {
+        "position": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "archetype": { "$ref": "#/$defs/Archetype" },
+        "topic": { "type": "string", "minLength": 10, "description": "One sentence topic summary" },
+        "experiment_feeds": { "type": "string", "description": "EXP-ID of active experiment this post feeds, or 'new'" },
+        "suggested_filename": { "type": "string", "pattern": "^social/\\d{4}-\\d{2}/\\d{4}-\\d{2}-\\d{2}-.+\\.md$" }
+      }
+    },
+
+    "SetManifest": {
+      "type": "object",
+      "required": ["set_id", "arc_summary", "stage", "context_used", "posts"],
+      "properties": {
+        "set_id": { "type": "string", "pattern": "^SET-\\d{3}$" },
+        "arc_summary": { "type": "string", "minLength": 10, "description": "One sentence through-line narrative of the set" },
+        "stage": { "$ref": "#/$defs/Stage" },
+        "context_used": { "type": "string" },
+        "posts": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": { "$ref": "#/$defs/SetManifestPost" }
+        }
+      }
+    },
+
+    "PostSetLinks": {
+      "type": "array",
+      "description": "All posts in the set, for cross-linking in each post's meta section",
+      "items": {
+        "type": "object",
+        "required": ["position", "filename", "archetype"],
+        "properties": {
+          "position": { "type": "integer" },
+          "filename": { "type": "string" },
+          "archetype": { "$ref": "#/$defs/Archetype" },
+          "is_this_post": { "type": "boolean", "default": false }
+        }
+      }
+    },
+
+    "PostMeta": {
+      "type": "object",
+      "required": ["archetype", "set_id", "set_posts", "stage"],
+      "properties": {
+        "archetype": { "$ref": "#/$defs/Archetype" },
+        "set_id": { "type": "string", "pattern": "^SET-\\d{3}$" },
+        "set_posts": { "$ref": "#/$defs/PostSetLinks" },
+        "stage": { "$ref": "#/$defs/Stage" }
+      }
+    },
+
+    "PlatformNotes": {
+      "type": "object",
+      "required": ["linkedin", "facebook"],
+      "properties": {
+        "linkedin": { "type": "string", "description": "Hashtag recommendations and any platform-specific notes" },
+        "facebook": { "type": "string", "description": "Mirror LinkedIn copy, no hashtags" }
+      }
+    },
+
+    "PostFile": {
+      "type": "object",
+      "required": ["title", "date", "platforms", "status", "experiment_id", "meta", "copy", "platform_notes", "production_notes"],
+      "properties": {
+        "title": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "platforms": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Platform" }
+        },
+        "status": { "$ref": "#/$defs/PostStatus" },
+        "experiment_id": { "type": "string", "pattern": "^EXP-\\d{3}$" },
+        "meta": { "$ref": "#/$defs/PostMeta" },
+        "copy": { "type": "string", "minLength": 100, "maxLength": 3000 },
+        "platform_notes": { "$ref": "#/$defs/PlatformNotes" },
+        "production_notes": { "type": "string", "minLength": 20 }
+      }
+    },
+
+    "ProposedExpEntry": {
+      "type": "object",
+      "required": ["exp_id", "category", "hypothesis", "test_design", "segment", "start_date"],
+      "properties": {
+        "exp_id": { "type": "string", "pattern": "^EXP-\\d{3}$" },
+        "category": { "type": "string" },
+        "hypothesis": { "type": "string", "minLength": 10 },
+        "test_design": { "type": "string", "minLength": 10 },
+        "segment": { "type": "string" },
+        "start_date": { "type": "string", "format": "date" }
+      }
+    },
+
+    "HandoffNext": {
+      "type": "object",
+      "required": ["needed", "target_agent", "reason"],
+      "properties": {
+        "needed": { "type": "boolean" },
+        "target_agent": { "type": ["string", "null"] },
+        "reason": { "type": "string" }
+      }
+    },
+
+    "Output": {
+      "type": "object",
+      "required": ["set_manifest", "posts", "confidence", "rationale", "human_review_required", "experiment_log_update", "handoff_next"],
+      "properties": {
+        "set_manifest": { "$ref": "#/$defs/SetManifest" },
+        "posts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "items": { "$ref": "#/$defs/PostFile" }
+        },
+        "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "rationale": { "type": "string", "minLength": 20 },
+        "human_review_required": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Claims that require human verification before publishing"
+        },
+        "experiment_log_update": { "type": "boolean" },
+        "proposed_exp_entries": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ProposedExpEntry" }
+        },
+        "handoff_next": { "$ref": "#/$defs/HandoffNext" }
+      }
+    }
+  },
+
+  "type": "object",
+  "properties": {
+    "input": { "$ref": "#/$defs/Input" },
+    "output": { "$ref": "#/$defs/Output" }
+  }
+}

@@ -4,47 +4,76 @@ Purpose
 - Provide a concise, reusable AI playbook to assist the solo founder with decomposition, review, and ADR drafting. All AI outputs are advisory and require human review.
 
 Roles & Responsibilities
-- General Troubleshooter: Single troubleshooting entrypoint; routes incidents to software-architect or infra-architect.
-- Software Architect: Software-domain triage lead; routes to language/performance specialists.
-- Infra Architect: Infrastructure-domain triage lead; routes to k8s/talos/docker troubleshooters.
-- Project Manager: Lifecycle entrypoint for planning/governance; routes to project specialists.
+- project-orchestrator: Lifecycle entrypoint for planning/governance; coordinates story generation.
+- architecture-specialist: System design orchestrator; frames decisions and delegates architecture stages.
+- engineering-orchestrator: Engineering triager; assigns coding tasks to language specialists.
+- ops-orchestrator: Single troubleshooting entrypoint; routes incidents to software/infra triage.
+- gtm-orchestrator: Go-To-Market and communications planner.
+- research-orchestrator: Discovery and spike execution planner.
+- software-architect: Software-domain triage lead; routes to language/performance specialists.
+- infra-architect: Infrastructure-domain triage lead; routes to k8s/talos/docker troubleshooters.
 - DSA Specialist: Performance and bottleneck specialist across all runtime languages.
 - Go Specialist: Language specialist for Kerrigan and KUI.
 - Python Specialist: Language specialist for em-audio and Python tooling.
 - JavaScript Specialist: Language specialist for progress-tracker and JS tooling.
 - IaC Specialist: Terraform + Ansible specialist for em-infra.
 - Shell Specialist: Script/CI specialist for shell-based automation.
-- MVP Clarifier: Convert an idea into minimal success criteria and 3 prioritized stories.
-- C4 Architect: Produce C4-context and container-level descriptions (textual) and identify components to implement.
+- MVP Clarifier: Convert an idea into minimal success criteria and prioritized stories.
+- C4 Architect: Produce C4-context and container-level descriptions.
+- Architecture Markdown Specialist: Convert architecture discussion into normalized markdown.
+- Mermaid Diagram Specialist: Transform architecture specs into valid Mermaid diagrams.
+- Diagram SVG Specialist: Package Mermaid outputs into SVG artifact plans.
 - Story Generator: Create atomic user stories with acceptance tests.
 - Technical Decomposer: Produce ordered tasks, tests, and CI considerations.
-- Architecture Guardian: Check a change against ADRs and list violations (advisory).
-- Refactor Auditor: Evaluate refactor diffs for regression risks and required tests.
+- Architecture Guardian: Check a change against ADRs and list violations.
+- Refactor Auditor: Evaluate refactor diffs for regression risks.
 - ADR Generator: Produce MADR-style ADR drafts given a decision summary.
+- Social Post Writer: Generate LinkedIn/Facebook post sets in the founder's voice.
 
-Troubleshooting Hierarchy
-- general-troubleshooter
-  - software-architect
+Agent location rule
+- ALL agents (`<name>-prompt.md`, `<name>-schema.json`, `README.md`) live in `org-dot-github/agents/<pod>/<agent-name>/` — organized into capability pods within the canonical `.github` repository.
+- Never place agent definition files in product docs, planning docs, implementation directories, or any application repository.
+- Product-specific context docs (voice rules, ICP, ingestion manifests) may live in their respective repos and are loaded as runtime inputs into agents — they are not agents themselves.
+- Shared handoff contracts live in `agents/_shared/`.
+
+Capability Pods (Hierarchy)
+- planning/
+  - project-orchestrator
+    - mvp-clarifier
+    - story-generator
+    - technical-decomposer
+- architecture/
+  - architecture-specialist
+    - architecture-markdown-specialist
+    - mermaid-diagram-specialist
+    - diagram-svg-specialist
+    - c4-architect
+    - architecture-guardian
+    - adr-generator
+- engineering/
+  - engineering-orchestrator
     - go-specialist
     - python-specialist
     - javascript-specialist
     - iac-specialist
-    - shell-specialist
+    - refactor-auditor
     - dsa-specialist
-  - infra-architect
+- operations/
+  - ops-orchestrator
+    - software-architect
+    - infra-architect
+    - docker-troubleshooter
     - k8s-troubleshooter
     - talos-troubleshooter
-    - docker-troubleshooter
+    - shell-specialist
+- gtm/
+  - gtm-orchestrator
+    - social-post-writer
+- discovery/
+  - research-orchestrator
 
-Project Hierarchy
-- project-manager
-  - mvp-clarifier
-  - c4-architect
-  - story-generator
-  - technical-decomposer
-  - architecture-guardian
-  - refactor-auditor
-  - adr-generator
+Standalone Agents (no router; invoked directly)
+- social-post-writer
 
 Handoff protocol
 - Use shared contract at `agents/_shared/handoff-protocol.md`.
@@ -53,8 +82,8 @@ Handoff protocol
 - Use `lifecycle_handoff` only when diagnosis points to design/process work instead of an operational fix.
 
 Lifecycle bridge (advisory)
-- Troubleshooting agents should hand off to `project-manager` first for lifecycle routing.
-- Troubleshooting agents can also directly recommend: mvp-clarifier, c4-architect, story-generator, technical-decomposer, architecture-guardian, adr-generator, or refactor-auditor when target is unambiguous.
+- Troubleshooting agents should hand off to `project-orchestrator` first for lifecycle routing.
+- Troubleshooting agents can also directly recommend: architecture-specialist, mvp-clarifier, c4-architect, story-generator, technical-decomposer, architecture-guardian, adr-generator, or refactor-auditor when target is unambiguous.
 - Lifecycle agents remain a separate planning/quality pipeline; do not auto-execute changes.
 
 Project handoff protocol
@@ -63,17 +92,17 @@ Project handoff protocol
 
 Manual-first operating model
 - Do not automate end-to-end agent chains yet; run one step at a time and validate manually.
-- Always start at a root router (`general-troubleshooter` for incidents, `project-manager` for lifecycle/planning).
+- Always start at a root router (`ops-orchestrator` for incidents, `project-orchestrator` for lifecycle/planning).
 - Treat all agent outputs as advisory until a human validates evidence and next commands.
 - A human operator is responsible for running commands, applying changes, and deciding whether to continue handoffs.
 
 Manual workflow (recommended)
-1) Pick the correct root entrypoint (`general-troubleshooter` or `project-manager`).
+1) Pick the correct root entrypoint (`ops-orchestrator` or `project-orchestrator`).
 2) Provide minimal, concrete context (symptom/request, environment, evidence, recent changes).
 3) Capture structured output and check required fields (`confidence`, `rationale`, plus `escalation` or `handoff_next`).
 4) Execute suggested verification commands manually and confirm/deny the hypothesis.
 5) If unresolved, pass forward using `handoff_input` and preserve evidence/layers cleared.
-6) If root cause is non-operational, route into lifecycle via `project-manager`.
+6) If root cause is non-operational, route into lifecycle via `project-orchestrator`.
 7) Record outcome (confirmed cause, fix, verification) in the active repo docs/tracker.
 
 Prompting conventions (always follow)

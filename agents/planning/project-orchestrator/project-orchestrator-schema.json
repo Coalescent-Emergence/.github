@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Coalescent-Emergence/.github/agents/project-orchestrator/project-orchestrator-schema.json",
+  "title": "Project Manager Output Schema",
+  "type": "object",
+  "required": ["request_type", "target_agent", "routing_reason", "handoff_input", "next_inputs_needed", "confidence", "rationale"],
+  "properties": {
+    "request_type": {
+      "type": "string",
+      "enum": [
+        "mvp_scope",
+        "architecture_design",
+        "story_generation",
+        "task_decomposition",
+        "adr_drafting",
+        "adr_compliance_review",
+        "refactor_risk_review"
+      ]
+    },
+    "target_agent": {
+      "type": "string",
+      "enum": [
+        "mvp-clarifier",
+        "c4-architect",
+        "story-generator",
+        "technical-decomposer",
+        "adr-generator",
+        "architecture-guardian",
+        "refactor-auditor"
+      ]
+    },
+    "routing_reason": { "type": "string", "minLength": 10 },
+    "handoff_input": { "$ref": "../../_shared/project-handoff-schema.json#/$defs/ProjectHandoffInput" },
+    "next_inputs_needed": { "type": "array", "items": { "type": "string" } },
+    "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "rationale": { "type": "string", "minLength": 10 }
+  },
+  "additionalProperties": false
+}

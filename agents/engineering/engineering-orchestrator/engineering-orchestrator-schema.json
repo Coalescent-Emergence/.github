@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Coalescent-Emergence/.github/agents/engineering/engineering-orchestrator/engineering-orchestrator-schema.json",
+  "title": "Engineering Orchestrator Output Schema",
+  "type": "object",
+  "required": [
+    "problem_frame",
+    "delegation_plan",
+    "deliverables",
+    "confidence",
+    "rationale",
+    "handoff_next"
+  ],
+  "properties": {
+    "problem_frame": {
+      "type": "object",
+      "required": ["language_stack", "affected_repos", "key_risks"],
+      "properties": {
+        "language_stack": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "affected_repos": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "key_risks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "delegation_plan": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["step", "target_agent", "goal"],
+        "properties": {
+          "step": { "type": "integer", "minimum": 1 },
+          "target_agent": {
+            "type": "string",
+            "enum": [
+              "go-specialist",
+              "python-specialist",
+              "javascript-specialist",
+              "iac-specialist",
+              "refactor-auditor",
+              "dsa-specialist",
+              "none"
+            ]
+          },
+          "goal": { "type": "string", "minLength": 8 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "deliverables": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    },
+    "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "rationale": { "type": "string", "minLength": 12 },
+    "handoff_next": {
+      "$ref": "../../_shared/project-handoff-schema.json#/$defs/HandoffNext"
+    }
+  },
+  "additionalProperties": false
+}

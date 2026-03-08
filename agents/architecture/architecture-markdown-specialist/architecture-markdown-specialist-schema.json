@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Coalescent-Emergence/.github/agents/architecture-markdown-specialist/architecture-markdown-specialist-schema.json",
+  "title": "Architecture Markdown Specialist Output Schema",
+  "type": "object",
+  "required": [
+    "document_title",
+    "summary",
+    "architecture_markdown",
+    "sections_present",
+    "diagram_inputs",
+    "confidence",
+    "rationale",
+    "handoff_next"
+  ],
+  "properties": {
+    "document_title": { "type": "string", "minLength": 6 },
+    "summary": { "type": "string", "minLength": 12 },
+    "architecture_markdown": {
+      "type": "string",
+      "minLength": 50,
+      "description": "Complete markdown architecture spec"
+    },
+    "sections_present": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "string",
+        "enum": [
+          "problem",
+          "scope",
+          "constraints",
+          "context_boundary",
+          "containers",
+          "components",
+          "relationships",
+          "decisions",
+          "risks",
+          "open_questions"
+        ]
+      }
+    },
+    "diagram_inputs": {
+      "type": "object",
+      "required": ["diagram_levels", "entities", "relationships"],
+      "properties": {
+        "diagram_levels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["C4Context", "C4Container", "C4Component", "Flowchart", "Sequence"]
+          },
+          "minItems": 1
+        },
+        "entities": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "relationships": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": ".+ (->|<-) .+"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "rationale": { "type": "string", "minLength": 12 },
+    "handoff_next": {
+      "$ref": "../../_shared/project-handoff-schema.json#/$defs/HandoffNext"
+    }
+  },
+  "additionalProperties": false
+}

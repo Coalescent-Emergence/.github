@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Coalescent-Emergence/.github/agents/architecture-specialist/architecture-specialist-schema.json",
+  "title": "Architecture Specialist Output Schema",
+  "type": "object",
+  "required": [
+    "problem_frame",
+    "recommended_c4_entry_level",
+    "design_decisions",
+    "artifact_pipeline",
+    "delegation_plan",
+    "deliverables",
+    "confidence",
+    "rationale",
+    "handoff_next"
+  ],
+  "properties": {
+    "problem_frame": {
+      "type": "object",
+      "required": ["system_goal", "constraints", "key_risks"],
+      "properties": {
+        "system_goal": { "type": "string", "minLength": 10 },
+        "constraints": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "key_risks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "recommended_c4_entry_level": {
+      "type": "string",
+      "enum": ["C4Context", "C4Container", "C4Component"]
+    },
+    "design_decisions": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["id", "decision", "rationale", "impact"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^D[0-9]+$" },
+          "decision": { "type": "string", "minLength": 8 },
+          "rationale": { "type": "string", "minLength": 12 },
+          "impact": { "type": "string", "minLength": 8 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "artifact_pipeline": {
+      "type": "array",
+      "description": "Ordered architecture artifact flow",
+      "minItems": 2,
+      "items": {
+        "type": "string",
+        "enum": [
+          "architecture_markdown",
+          "mermaid_diagrams",
+          "svg_packaging"
+        ]
+      }
+    },
+    "delegation_plan": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["step", "target_agent", "goal"],
+        "properties": {
+          "step": { "type": "integer", "minimum": 1 },
+          "target_agent": {
+            "type": "string",
+            "enum": [
+              "architecture-markdown-specialist",
+              "mermaid-diagram-specialist",
+              "diagram-svg-specialist",
+              "c4-architect",
+              "architecture-guardian",
+              "adr-generator",
+              "none"
+            ]
+          },
+          "goal": { "type": "string", "minLength": 8 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "deliverables": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    },
+    "adr_needed": { "type": "boolean" },
+    "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "rationale": { "type": "string", "minLength": 12 },
+    "handoff_next": {
+      "$ref": "../../_shared/project-handoff-schema.json#/$defs/HandoffNext"
+    }
+  },
+  "additionalProperties": false
+}

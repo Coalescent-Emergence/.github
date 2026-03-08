@@ -12,7 +12,7 @@ Define a single, reusable communication contract so troubleshooting agents can d
 ## Handoff Input Contract
 ```json
 {
-  "from_agent": "general-troubleshooter",
+  "from_agent": "ops-orchestrator",
   "to_agent": "software-architect",
   "reason": "Issue likely in software design or implementation",
   "priority": "high",
@@ -39,7 +39,7 @@ Define a single, reusable communication contract so troubleshooting agents can d
 {
   "needed": true,
   "direction": "up",
-  "target_agent": "general-troubleshooter",
+  "target_agent": "ops-orchestrator",
   "reason": "Need cross-domain arbitration",
   "context_to_pass": {
     "evidence_gathered": [

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Coalescent-Emergence/.github/agents/dsa-specialist/dsa-specialist-schema.json",
+  "title": "DSA Specialist Output Schema",
+  "type": "object",
+  "required": ["bottleneck_type", "location", "evidence", "optimization_approach", "expected_improvement", "trade_offs", "verification", "escalation", "confidence", "rationale"],
+  "properties": {
+    "bottleneck_type": {
+      "type": "string",
+      "enum": ["cpu", "memory", "io", "network", "algorithmic", "concurrency"]
+    },
+    "location": { "type": "string", "minLength": 5 },
+    "evidence": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "optimization_approach": { "type": "string", "minLength": 10 },
+    "expected_improvement": { "type": "string", "minLength": 5 },
+    "trade_offs": { "type": "array", "items": { "type": "string" } },
+    "verification": { "type": "string", "minLength": 5 },
+    "escalation": { "$ref": "../../_shared/handoff-schema.json#/$defs/Escalation" },
+    "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "rationale": { "type": "string", "minLength": 10 }
+  },
+  "additionalProperties": false
+}

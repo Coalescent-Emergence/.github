@@ -86,7 +86,7 @@
         "suggested_agent": {
           "type": "string",
           "enum": [
-            "project-manager",
+            "project-orchestrator",
             "mvp-clarifier",
             "c4-architect",
             "story-generator",

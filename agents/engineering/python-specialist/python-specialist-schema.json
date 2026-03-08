@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Coalescent-Emergence/.github/agents/python-specialist/python-specialist-schema.json",
+  "title": "Python Specialist Output Schema",
+  "type": "object",
+  "required": ["failing_layer", "root_cause", "evidence", "fix", "verification", "escalation", "confidence", "rationale"],
+  "properties": {
+    "failing_layer": {
+      "type": "string",
+      "enum": ["dependency", "runtime", "api_contract", "async", "model_config"]
+    },
+    "root_cause": { "type": "string", "minLength": 8 },
+    "evidence": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "fix": { "type": "string", "minLength": 8 },
+    "verification": { "type": "string", "minLength": 5 },
+    "escalation": { "$ref": "../../_shared/handoff-schema.json#/$defs/Escalation" },
+    "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "rationale": { "type": "string", "minLength": 8 }
+  },
+  "additionalProperties": false
+}
