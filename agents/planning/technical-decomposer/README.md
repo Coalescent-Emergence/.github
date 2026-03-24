@@ -39,7 +39,7 @@ Structured JSON with:
 Story: User can login and receive JWT token
 
 Repository: Kerrigan
-Tech Stack: Go 1.23, Chi router, pgx (PostgreSQL), golang-jwt/jwt
+Tech Stack: Go 1.26.1, Chi router, pgx (PostgreSQL), golang-jwt/jwt
 ```
 
 ### Output

@@ -166,7 +166,7 @@ Kerrigan is the backend API gateway and orchestration layer. Needs to handle:
 
 ## Decision Outcome
 
-Chosen option: "Go 1.23+", because native concurrency, strong typing, and deployment simplicity align with backend requirements.
+Chosen option: "Go 1.26.1", because native concurrency, strong typing, and deployment simplicity align with backend requirements.
 
 [... continue with full MADR format ...]
 ```
@@ -260,7 +260,7 @@ jobs:
       
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: '1.26.1'
           
       - name: Install dependencies
         run: go mod download
