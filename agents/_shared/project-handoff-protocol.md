@@ -5,7 +5,7 @@ Define a modular handoff contract for product/planning/architecture agents so pr
 
 ## Project Hierarchy
 ```text
-project-orchestrator
+project-manager
 ├── mvp-clarifier
 ├── c4-architect
 ├── story-generator
@@ -16,13 +16,13 @@ project-orchestrator
 ```
 
 ## Bridge from Troubleshooting
-When software/infra troubleshooting identifies a non-operational gap (scope ambiguity, architectural decision, implementation sequencing, compliance review), route to `project-orchestrator` first.
+When software/infra troubleshooting identifies a non-operational gap (scope ambiguity, architectural decision, implementation sequencing, compliance review), route to `project-manager` first.
 
 ## Handoff Input Contract
 ```json
 {
   "from_agent": "software-architect",
-  "to_agent": "project-orchestrator",
+  "to_agent": "project-manager",
   "reason": "Root cause requires design/task decomposition",
   "priority": "high",
   "context": {
@@ -57,7 +57,7 @@ Every project agent returns:
 ```
 
 ## Routing Guidance
-- `project-orchestrator` -> selects exactly one next lifecycle agent.
+- `project-manager` -> selects exactly one next lifecycle agent.
 - `mvp-clarifier` -> typically `story-generator`.
 - `story-generator` -> typically `technical-decomposer`.
 - `c4-architect` -> `adr-generator` when architectural decision record is required.

@@ -40,10 +40,11 @@ Load in this order. All paths relative to `mvp-control-plane/docs/`:
 
 1. `product/kerrigan/kerrigan_product_spec.md`
 2. `product/kerrigan/kerrigan_customer_research.md`
-3. `product/kerrigan/kerrigan_gtm_playbook.md`
-4. `product/kerrigan/kerrigan_experiment_log.md`
-5. `product/kerrigan/social/README.md`
-6. Last 3 post files from `product/kerrigan/social/`
+3. `product/kerrigan/kerrigan_founder_voice_guide.md`
+4. `product/kerrigan/kerrigan_gtm_playbook.md`
+5. `product/kerrigan/kerrigan_experiment_log.md`
+6. `product/kerrigan/social/README.md`
+7. Last 3 post files from `product/kerrigan/social/`
 
 ## Invocation
 
@@ -66,6 +67,12 @@ Generate SET-XXX. Context: [paste URL or short note]
 - Never make compliance guarantees ("HIPAA-compliant", "fully compliant", "guaranteed secure")
 - A5 (social_proof) and A6 (product_demo) archetypes are locked until pilot data exists
 - Propose experiment log additions only — never edit the log directly
+
+## Kerrigan-Specific Archetype Note
+
+- `A1 / origin_story` is not required to be autobiographical. For Kerrigan, it can be a design-origin post: the constraint, boundary, or product thesis that led to the build.
+- Prefer design-origin over personal-history framing when the founder's actual approach was first-principles product design rather than a single life-story trigger.
+- Use the founder voice guide as a hard constraint. Default to paragraph-based argument, not line-broken engagement prose.
 
 ## Schema
 

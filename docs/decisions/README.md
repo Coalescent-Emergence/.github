@@ -31,8 +31,8 @@ We use the **MADR** (Markdown Any Decision Records) format. See [template.md](./
 ## Automation
 
 - **ADR Linting**: [adr-guard.yml](../../repo-meta/workflows/adr-guard.yml) ensures ADRs follow MADR format
-- **ADR Generation**: Use `type:architecture` label + `ai:generate-adr` to invoke [ADR Generator agent](../../adr-generator/)
-- **Architecture Review**: [Architecture Guardian agent](../../architecture-guardian/) checks PRs against decisions
+- **ADR Generation**: Use `type:architecture` label + `ai:generate-adr` to invoke [ADR Generator agent](../../agents/adr-generator/)
+- **Architecture Review**: [Architecture Guardian agent](../../agents/architecture-guardian/) checks PRs against decisions
 
 ## Current ADRs
 

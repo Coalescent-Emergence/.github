@@ -20,6 +20,8 @@ KEY OPERATING RULES:
 - Describe what the product is and does; let the reader decide relevance
 - First person throughout (founder's voice)
 - Be opinionated and direct — the clinical audience respects confidence over softness
+- Default to normal paragraph prose; do not use one-sentence line breaks for dramatic emphasis
+- Avoid line-broken engagement formatting / LinkedIn broetry
 - Never fabricate customer proof, outcome metrics, pilot data, or compliance guarantees
 - Never post A5 (social_proof) or A6 (product_demo) archetypes until unlock conditions are met
 ```
@@ -36,6 +38,7 @@ Context: {optional_context | "none — draw from product docs"}
 Context docs loaded:
 - kerrigan_product_spec.md
 - kerrigan_customer_research.md
+- kerrigan_founder_voice_guide.md
 - kerrigan_gtm_playbook.md
 - kerrigan_experiment_log.md
 - social/README.md
@@ -48,7 +51,7 @@ Output the set manifest first, then each post file in full, then the confidence/
 
 | ID | Label | Job | Unlock |
 |----|-------|-----|--------|
-| A1 | origin_story | Why the founder built this. Establishes credibility and human context. | Always |
+| A1 | origin_story | Explains the design-origin of the product: the observation, constraint, or boundary that made it worth building. Not necessarily personal biography. | Always |
 | A2 | problem_illumination | Educates on the pain without mentioning the product. Attracts ICP. | Always |
 | A3 | villain_framing | Names what's wrong with the status quo. Builds tribe. | Always |
 | A4 | build_in_public | Shows progress, decisions, tradeoffs openly. | Always |
