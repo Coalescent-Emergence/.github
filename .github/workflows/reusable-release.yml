@@ -89,7 +89,7 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: ${{ inputs.image_name != '' && 'image' || 'fs' }}
-          scan-ref: ${{ inputs.image_name != '' && steps.meta.outputs.tags || '.' }}
+          scan-ref: ${{ inputs.image_name != '' && steps.build-push.outputs.imageid || '.' }}
           format: 'table'
           severity: 'HIGH,CRITICAL'
           ignore-unfixed: true
