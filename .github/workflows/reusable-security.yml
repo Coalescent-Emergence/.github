@@ -1,0 +1,175 @@
+name: Reusable Security Scanning
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  detect-stack:
+    name: Detect tech stack
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      stack: ${{ steps.detect.outputs.stack }}
+      codeql_language: ${{ steps.detect.outputs.codeql_language }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Detect tech stack for security rules
+        id: detect
+        run: |
+          if [ -f "go.mod" ]; then
+            echo "stack=go" >> "$GITHUB_OUTPUT"
+            echo "codeql_language=go" >> "$GITHUB_OUTPUT"
+          elif [ -f "package.json" ]; then
+            echo "stack=node" >> "$GITHUB_OUTPUT"
+            echo "codeql_language=javascript-typescript" >> "$GITHUB_OUTPUT"
+          elif [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+            echo "stack=python" >> "$GITHUB_OUTPUT"
+            echo "codeql_language=python" >> "$GITHUB_OUTPUT"
+          else
+            echo "stack=unknown" >> "$GITHUB_OUTPUT"
+            echo "codeql_language=" >> "$GITHUB_OUTPUT"
+          fi
+
+  codeql:
+    name: CodeQL SAST
+    needs: detect-stack
+    if: needs.detect-stack.outputs.codeql_language != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@a65a038433a26f4363cf9f029e3b9ceac831ad5d # v3.28.10
+        with:
+          languages: ${{ needs.detect-stack.outputs.codeql_language }}
+          queries: security-extended
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@a65a038433a26f4363cf9f029e3b9ceac831ad5d # v3.28.10
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@a65a038433a26f4363cf9f029e3b9ceac831ad5d # v3.28.10
+        with:
+          category: /language:${{ needs.detect-stack.outputs.codeql_language }}
+
+  govulncheck:
+    name: Go vulnerability scan
+    needs: detect-stack
+    if: needs.detect-stack.outputs.stack == 'go'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Go
+        uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5.3.0
+        with:
+          go-version: '1.23'
+          cache: true
+
+      - name: Run govulncheck
+        uses: golang/govulncheck-action@b625fbe08f3bccbe446d94fbf87fcc875a4f50ee # v1.0.4
+        with:
+          go-version-input: '1.23'
+
+  trivy:
+    name: Trivy filesystem vulnerability scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@18f2510ee396bbf4004029a2073930a80080f80a # v0.29.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: true
+          exit-code: '0'
+
+      - name: Upload Trivy SARIF results
+        if: always()
+        uses: github/codeql-action/upload-sarif@a65a038433a26f4363cf9f029e3b9ceac831ad5d # v3.28.10
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  gitleaks:
+    name: Gitleaks secret scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@29311394c8e762c4a93c780995c7324317804473 # v2.3.7
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+  npm-audit:
+    name: npm dependency audit
+    needs: detect-stack
+    if: needs.detect-stack.outputs.stack == 'node'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit dependencies (fail on high/critical)
+        run: npm audit --audit-level=high
+
+  pip-audit:
+    name: Python dependency audit
+    needs: detect-stack
+    if: needs.detect-stack.outputs.stack == 'python'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
+        with:
+          python-version: '3.11'
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Audit dependencies
+        run: |
+          if [ -f requirements.txt ]; then pip-audit -r requirements.txt; fi
+          if [ -f pyproject.toml ]; then pip-audit .; fi

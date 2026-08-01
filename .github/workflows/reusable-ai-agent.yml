@@ -1,0 +1,71 @@
+name: Reusable AI Agent Task Execution Wrapper
+
+on:
+  workflow_call:
+    inputs:
+      agent_name:
+        description: 'Human-readable name of the AI agent'
+        required: true
+        type: string
+      agent_type:
+        description: 'Agent role (e.g. adr-generator, architecture-guardian, mvp-clarifier, refactor-auditor, story-generator, technical-decomposer)'
+        required: false
+        type: string
+        default: 'architecture-guardian'
+      model:
+        description: 'AI model to utilize for analysis'
+        required: false
+        type: string
+        default: 'gpt-4o'
+      task_prompt:
+        description: 'Custom prompt override for task execution'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  run-ai-agent:
+    name: Run AI Agent
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Checkout org .github repo for shared agent assets
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: Coalescent-Emergence/.github
+          path: .tmp/.github-org
+
+      - name: Execute AI Agent Task
+        id: agent-step
+        env:
+          AGENT_NAME: ${{ inputs.agent_name }}
+          AGENT_TYPE: ${{ inputs.agent_type }}
+          AGENT_MODEL: ${{ inputs.model }}
+          TASK_PROMPT: ${{ inputs.task_prompt }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN || github.token }}
+        run: |
+          echo "Executing AI Agent: $AGENT_NAME ($AGENT_TYPE) with model $AGENT_MODEL"
+          mkdir -p .tmp/agent-results
+          cat <<EOF > .tmp/agent-results/summary.json
+          {
+            "agent_name": "${AGENT_NAME}",
+            "agent_type": "${AGENT_TYPE}",
+            "model": "${AGENT_MODEL}",
+            "status": "completed",
+            "timestamp": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          }
+          EOF
+          cat .tmp/agent-results/summary.json

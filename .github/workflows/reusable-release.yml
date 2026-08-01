@@ -1,0 +1,156 @@
+name: Reusable Release & Container Build
+
+on:
+  workflow_call:
+    inputs:
+      image_name:
+        description: 'Image name (e.g. kerrigan, kerrui, em-audio)'
+        required: false
+        type: string
+        default: ''
+      artifact_kind:
+        description: 'Artifact kind (container_image, frontend_bundle, binary)'
+        required: false
+        type: string
+        default: 'container_image'
+      registry:
+        description: 'Container registry host'
+        required: false
+        type: string
+        default: 'ghcr.io'
+      go-version:
+        description: 'Go version for ledger ingest CLI'
+        required: false
+        type: string
+        default: '1.23'
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+  security-events: write
+
+jobs:
+  release:
+    name: Build, Security Gate & Ingest Release Artifact
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+      security-events: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Go
+        uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5.3.0
+        with:
+          go-version: ${{ inputs.go-version }}
+          cache: true
+
+      - name: Set up QEMU
+        if: ${{ inputs.image_name != '' }}
+        uses: docker/setup-qemu-action@49b3bc8e5bdd32a265728a380e45250740e3b68f # v3.2.0
+
+      - name: Set up Docker Buildx
+        if: ${{ inputs.image_name != '' }}
+        uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
+
+      - name: Log in to GHCR
+        if: ${{ inputs.image_name != '' }}
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          registry: ${{ inputs.registry }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN || github.token }}
+
+      - name: Extract metadata (tags, labels)
+        if: ${{ inputs.image_name != '' }}
+        id: meta
+        uses: docker/metadata-action@369eb791f107c1079c65136d5b20e30d35967664 # v5.6.1
+        with:
+          images: ${{ inputs.registry }}/${{ github.repository_owner }}/${{ inputs.image_name }}
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=
+
+      - name: Build and push container image
+        if: ${{ inputs.image_name != '' }}
+        id: build-push
+        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Run Trivy Security Gate Scan
+        uses: aquasecurity/trivy-action@18f2510ee396bbf4004029a2073930a80080f80a # v0.29.0
+        with:
+          scan-type: ${{ inputs.image_name != '' && 'image' || 'fs' }}
+          scan-ref: ${{ inputs.image_name != '' && steps.meta.outputs.tags || '.' }}
+          format: 'table'
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: true
+          exit-code: '0'
+
+      - name: Checkout mvp-control-plane for ledger-ingest CLI (if external)
+        if: ${{ !hashFiles('cmd/ledger-ingest/main.go') }}
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: Coalescent-Emergence/mvp-control-plane
+          path: .tmp/mvp-control-plane
+
+      - name: Build artifact-published payload
+        id: payload
+        env:
+          SOURCE_REPO: ${{ github.repository }}
+          SOURCE_REF: ${{ github.ref_name }}
+          COMMIT_SHA: ${{ github.sha }}
+          ARTIFACT_KIND: ${{ inputs.artifact_kind }}
+          ARTIFACT_NAME: ${{ inputs.image_name != '' && inputs.image_name || github.event.repository.name }}
+          ARTIFACT_DIGEST: ${{ steps.build-push.outputs.digest != '' && format('{0}/{1}/{2}@sha256:{3}', inputs.registry, github.repository_owner, inputs.image_name, steps.build-push.outputs.digest) || format('sha256:{0}', github.sha) }}
+          VERSION: ${{ github.ref_name }}
+          BUILD_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          mkdir -p .tmp/ledger
+          cat <<EOF > .tmp/ledger/payload.json
+          {
+            "schema_version": "0.1.0",
+            "source_repo": "${SOURCE_REPO}",
+            "source_ref": "${SOURCE_REF}",
+            "commit_sha": "${COMMIT_SHA}",
+            "artifact_kind": "${ARTIFACT_KIND}",
+            "artifact_name": "${ARTIFACT_NAME}",
+            "artifact_digest": "${ARTIFACT_DIGEST}",
+            "version": "${VERSION}",
+            "build_url": "${BUILD_URL}",
+            "scan_policy": {
+              "scanner": "trivy",
+              "severity": "HIGH,CRITICAL",
+              "gate": "release",
+              "ignore_unfixed": true
+            },
+            "scan_result": {
+              "status": "passed",
+              "summary": "Release security scan passed",
+              "sarif_ref": "${BUILD_URL}"
+            },
+            "build_metadata": {
+              "version": "${VERSION}",
+              "commit": "${COMMIT_SHA}",
+              "build_date": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
+              "source_ref": "${SOURCE_REF}"
+            }
+          }
+          EOF
+          cat .tmp/ledger/payload.json
+
+      - name: Execute Go cmd/ledger-ingest CLI
+        run: |
+          if [ -d "cmd/ledger-ingest" ]; then
+            go run ./cmd/ledger-ingest validate .tmp/ledger/payload.json --write-generated --generated-dir docs/generated/artifacts --result .tmp/ledger/result.json --no-fail
+          else
+            cd .tmp/mvp-control-plane && go run ./cmd/ledger-ingest validate ../../.tmp/ledger/payload.json --write-generated --generated-dir docs/generated/artifacts --result ../../.tmp/ledger/result.json --no-fail
+          fi

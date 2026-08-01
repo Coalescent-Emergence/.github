@@ -1,0 +1,16 @@
+name: CI (Multi-Repo)
+
+on:
+  pull_request:
+    branches: [main, dev]
+  push:
+    branches: [main, dev]
+
+# Explicit least-privilege permissions for SOC2/HIPAA compliance
+permissions:
+  contents: read      # Read repository contents
+  checks: write       # Publish test results and check runs
+
+jobs:
+  ci:
+    uses: ./.github/workflows/reusable-ci.yml

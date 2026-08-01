@@ -1,0 +1,52 @@
+name: Reusable PR Validation
+
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        description: 'Go version for compiling validator CLI'
+        required: false
+        type: string
+        default: '1.23'
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+
+jobs:
+  validate-pr:
+    name: Validate PR Title & Linked Issues
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Go
+        uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5.3.0
+        with:
+          go-version: ${{ inputs.go-version }}
+          cache: true
+
+      - name: Checkout mvp-control-plane for pr-validator CLI (if external)
+        if: ${{ !hashFiles('cmd/pr-validator/main.go') }}
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: Coalescent-Emergence/mvp-control-plane
+          path: .tmp/mvp-control-plane
+
+      - name: Run pr-validator Go CLI
+        env:
+          GITHUB_API_URL: ${{ github.api_url }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN || github.token }}
+        run: |
+          if [ -d "cmd/pr-validator" ]; then
+            go run ./cmd/pr-validator
+          else
+            cd .tmp/mvp-control-plane && go run ./cmd/pr-validator
+          fi

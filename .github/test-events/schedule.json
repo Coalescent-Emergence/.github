@@ -1,0 +1,9 @@
+{
+  "schedule": "0 8 * * 1",
+  "repository": {
+    "name": ".github",
+    "owner": {
+      "login": "Coalescent-Emergence"
+    }
+  }
+}

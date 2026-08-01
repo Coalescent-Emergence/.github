@@ -1,0 +1,26 @@
+{
+  "action": "opened",
+  "number": 7,
+  "pull_request": {
+    "number": 7,
+    "title": "Test PR",
+    "body": "## Summary\nTest PR body for workflow validation",
+    "head": {
+      "ref": "test-branch",
+      "sha": "1111111111111111111111111111111111111111"
+    },
+    "base": {
+      "ref": "main",
+      "sha": "2222222222222222222222222222222222222222"
+    },
+    "labels": [
+      { "name": "type:refactor" }
+    ]
+  },
+  "repository": {
+    "name": ".github",
+    "owner": {
+      "login": "Coalescent-Emergence"
+    }
+  }
+}

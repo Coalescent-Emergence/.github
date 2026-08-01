@@ -1,0 +1,38 @@
+name: Reusable ADR Guard
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  adr-lint:
+    name: adr-lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node 18 for markdownlint
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+        with:
+          node-version: '18'
+
+      - name: Install markdownlint-cli
+        run: |
+          npm install -g markdownlint-cli@0.32.0
+
+      - name: Run markdownlint on ADRs
+        run: |
+          if [ -d "docs/decisions" ]; then
+            markdownlint "docs/decisions/**/*.md" || exit 1
+          else
+            echo "No docs/decisions directory found, skipping ADR lint."
+          fi

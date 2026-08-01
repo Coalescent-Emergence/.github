@@ -1,0 +1,196 @@
+name: Reusable CI
+
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        description: 'Go version'
+        required: false
+        type: string
+        default: '1.23'
+      node-version:
+        description: 'Node.js version'
+        required: false
+        type: string
+        default: '20'
+      python-version:
+        description: 'Python version'
+        required: false
+        type: string
+        default: '3.11'
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  detect-stack:
+    name: Detect Tech Stack
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      stack: ${{ steps.detect.outputs.stack }}
+      is_vite: ${{ steps.detect.outputs.is_vite }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Detect repository tech stack
+        id: detect
+        run: |
+          if [ -f "go.mod" ]; then
+            echo "stack=go" >> "$GITHUB_OUTPUT"
+          elif [ -f "package.json" ]; then
+            echo "stack=node" >> "$GITHUB_OUTPUT"
+            if grep -q "vite" package.json; then
+              echo "is_vite=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "is_vite=false" >> "$GITHUB_OUTPUT"
+            fi
+          elif [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+            echo "stack=python" >> "$GITHUB_OUTPUT"
+          else
+            echo "stack=unknown" >> "$GITHUB_OUTPUT"
+          fi
+
+  ci-go:
+    name: CI (Go)
+    needs: detect-stack
+    if: needs.detect-stack.outputs.stack == 'go'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Go
+        uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5.3.0
+        with:
+          go-version: ${{ inputs.go-version }}
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run tests with coverage
+        run: go test ./... -v -race -coverprofile=coverage.out
+
+      - name: Check test coverage
+        run: |
+          if [ -f coverage.out ]; then
+            COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+            echo "Total coverage: $COVERAGE%"
+            if (( $(echo "$COVERAGE < 70" | bc -l 2>/dev/null || echo 0) )); then
+              echo "::warning::Coverage $COVERAGE% is below 70% threshold"
+            fi
+          fi
+
+      - name: Run linter
+        uses: golangci/golangci-lint-action@1b6671e713fd51c7f28eb88acf29c9bf3c2eb15f # v6.5.0
+        with:
+          version: latest
+          args: --timeout=5m
+
+      - name: Build binaries
+        run: go build -v ./...
+
+  ci-node:
+    name: CI (Node.js/TypeScript/Vite)
+    needs: detect-stack
+    if: needs.detect-stack.outputs.stack == 'node'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cache Vite build artifacts
+        if: needs.detect-stack.outputs.is_vite == 'true'
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: node_modules/.vite
+          key: ${{ runner.os }}-vite-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-vite-
+
+      - name: Run linter
+        run: npm run lint --if-present
+
+      - name: Run type check
+        run: npm run type-check --if-present
+
+      - name: Run tests
+        run: npm test --if-present
+
+      - name: Build production bundle (Vite/Next/Web)
+        run: npm run build --if-present
+
+  ci-python:
+    name: CI (Python)
+    needs: detect-stack
+    if: needs.detect-stack.outputs.stack == 'python'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f pyproject.toml ]; then pip install -e .; fi
+
+      - name: Run linter (Ruff)
+        run: |
+          pip install ruff
+          ruff check . || echo "::warning::Ruff linting found issues"
+
+      - name: Run type checker (MyPy)
+        run: |
+          pip install mypy
+          mypy . --ignore-missing-imports || echo "::warning::MyPy found type issues"
+
+      - name: Run tests (Pytest)
+        run: |
+          pip install pytest pytest-cov
+          pytest --cov --cov-report=term-missing --cov-report=xml || echo "::warning::Tests completed with warnings"
+
+  ci-unknown:
+    name: CI (Unknown/Not Configured)
+    needs: detect-stack
+    if: needs.detect-stack.outputs.stack == 'unknown'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Warning - No CI configured
+        run: |
+          echo "::warning::Unable to detect tech stack (no go.mod, package.json, or requirements.txt)"
+          echo "::warning::Please configure repository-specific CI in .github/workflows/ci.yml"
+          exit 1

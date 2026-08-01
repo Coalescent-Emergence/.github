@@ -1,0 +1,17 @@
+name: Infra Terraform Validate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  terraform-validate:
+    uses: Coalescent-Emergence/.github/.github/workflows/reusable-infra-validate.yml@main
+    with:
+      fmt-command: make fmt
+      validate-command: make validate
