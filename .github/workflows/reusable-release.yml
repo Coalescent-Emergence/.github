@@ -41,25 +41,25 @@ jobs:
       security-events: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v4.2.2
 
       - name: Set up Go
-        uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5.3.0
+        uses: actions/setup-go@v5.3.0
         with:
           go-version: ${{ inputs.go-version }}
           cache: true
 
       - name: Set up QEMU
         if: ${{ inputs.image_name != '' }}
-        uses: docker/setup-qemu-action@49b3bc8e5bdd32a265728a380e45250740e3b68f # v3.2.0
+        uses: docker/setup-qemu-action@v3.2.0
 
       - name: Set up Docker Buildx
         if: ${{ inputs.image_name != '' }}
-        uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
+        uses: docker/setup-buildx-action@v3.7.1
 
       - name: Log in to GHCR
         if: ${{ inputs.image_name != '' }}
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        uses: docker/login-action@v3.3.0
         with:
           registry: ${{ inputs.registry }}
           username: ${{ github.actor }}
@@ -68,7 +68,7 @@ jobs:
       - name: Extract metadata (tags, labels)
         if: ${{ inputs.image_name != '' }}
         id: meta
-        uses: docker/metadata-action@369eb791f107c1079c65136d5b20e30d35967664 # v5.6.1
+        uses: docker/metadata-action@v5.6.1
         with:
           images: ${{ inputs.registry }}/${{ github.repository_owner }}/${{ inputs.image_name }}
           tags: |
@@ -78,7 +78,7 @@ jobs:
       - name: Build and push container image
         if: ${{ inputs.image_name != '' }}
         id: build-push
-        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
+        uses: docker/build-push-action@v6.9.0
         with:
           context: .
           push: true
@@ -86,7 +86,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Run Trivy Security Gate Scan
-        uses: aquasecurity/trivy-action@18f2510ee396bbf4004029a2073930a80080f80a # v0.29.0
+        uses: aquasecurity/trivy-action@master
         with:
           scan-type: ${{ inputs.image_name != '' && 'image' || 'fs' }}
           scan-ref: ${{ inputs.image_name != '' && steps.meta.outputs.tags || '.' }}
@@ -97,7 +97,7 @@ jobs:
 
       - name: Checkout mvp-control-plane for ledger-ingest CLI (if external)
         if: ${{ !hashFiles('cmd/ledger-ingest/main.go') }}
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v4.2.2
         with:
           repository: Coalescent-Emergence/mvp-control-plane
           path: .tmp/mvp-control-plane
