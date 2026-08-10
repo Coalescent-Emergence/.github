@@ -23,6 +23,16 @@ on:
         required: false
         type: string
         default: '1.23'
+      dockerfile:
+        description: 'Path to the Dockerfile to build (repos with separate dev/prod files pass e.g. ./Dockerfile.prod)'
+        required: false
+        type: string
+        default: './Dockerfile'
+      build_args:
+        description: 'Newline-separated build args passed to docker build'
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: write
@@ -74,6 +84,7 @@ jobs:
           tags: |
             type=raw,value=latest
             type=sha,prefix=
+            type=ref,event=tag
 
       - name: Build and push container image
         if: ${{ inputs.image_name != '' }}
@@ -81,6 +92,8 @@ jobs:
         uses: docker/build-push-action@v6.9.0
         with:
           context: .
+          file: ${{ inputs.dockerfile }}
+          build-args: ${{ inputs.build_args }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -89,7 +102,9 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: ${{ inputs.image_name != '' && 'image' || 'fs' }}
-          scan-ref: ${{ inputs.image_name != '' && steps.build-push.outputs.imageid || '.' }}
+          # Scan the pushed artifact by digest — buildx push-only builds never
+          # load into the local daemon, so imageid is unscannable there.
+          scan-ref: ${{ inputs.image_name != '' && format('{0}/{1}/{2}@{3}', inputs.registry, github.repository_owner, inputs.image_name, steps.build-push.outputs.digest) || '.' }}
           format: 'table'
           severity: 'HIGH,CRITICAL'
           ignore-unfixed: true
