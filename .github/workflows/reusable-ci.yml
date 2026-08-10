@@ -122,7 +122,7 @@ jobs:
 
       - name: Cache Vite build artifacts
         if: needs.detect-stack.outputs.is_vite == 'true'
-        uses: actions/cache@v4.0.2
+        uses: actions/cache@v4
         with:
           path: node_modules/.vite
           key: ${{ runner.os }}-vite-${{ hashFiles('**/package-lock.json') }}
