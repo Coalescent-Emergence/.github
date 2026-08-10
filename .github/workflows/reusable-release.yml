@@ -98,13 +98,23 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+      - name: Compute lowercase scan ref
+        if: ${{ inputs.image_name != '' }}
+        id: scanref
+        env:
+          REGISTRY: ${{ inputs.registry }}
+          OWNER: ${{ github.repository_owner }}
+          IMAGE: ${{ inputs.image_name }}
+          DIGEST: ${{ steps.build-push.outputs.digest }}
+        run: echo "ref=${REGISTRY}/${OWNER,,}/${IMAGE}@${DIGEST}" >> "$GITHUB_OUTPUT"
+
       - name: Run Trivy Security Gate Scan
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: ${{ inputs.image_name != '' && 'image' || 'fs' }}
           # Scan the pushed artifact by digest — buildx push-only builds never
           # load into the local daemon, so imageid is unscannable there.
-          scan-ref: ${{ inputs.image_name != '' && format('{0}/{1}/{2}@{3}', inputs.registry, github.repository_owner, inputs.image_name, steps.build-push.outputs.digest) || '.' }}
+          scan-ref: ${{ inputs.image_name != '' && steps.scanref.outputs.ref || '.' }}
           format: 'table'
           severity: 'HIGH,CRITICAL'
           ignore-unfixed: true
