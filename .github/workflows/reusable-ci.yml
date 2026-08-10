@@ -89,10 +89,12 @@ jobs:
           fi
 
       - name: Run linter
-        uses: golangci/golangci-lint-action@v6.5.0
+        uses: golangci/golangci-lint-action@v8
         with:
           version: latest
-          args: --timeout=5m
+          # Report only issues introduced by the change under test — most org
+          # repos predate linting and a full-repo report would drown PRs.
+          only-new-issues: true
 
       - name: Build binaries
         run: go build -v ./...
