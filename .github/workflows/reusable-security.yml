@@ -5,7 +5,6 @@ on:
 
 permissions:
   contents: read
-  security-events: write
 
 jobs:
   detect-stack:
@@ -15,7 +14,6 @@ jobs:
       contents: read
     outputs:
       stack: ${{ steps.detect.outputs.stack }}
-      codeql_language: ${{ steps.detect.outputs.codeql_language }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4.2.2
@@ -25,43 +23,47 @@ jobs:
         run: |
           if [ -f "go.mod" ]; then
             echo "stack=go" >> "$GITHUB_OUTPUT"
-            echo "codeql_language=go" >> "$GITHUB_OUTPUT"
           elif [ -f "package.json" ]; then
             echo "stack=node" >> "$GITHUB_OUTPUT"
-            echo "codeql_language=javascript-typescript" >> "$GITHUB_OUTPUT"
           elif [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
             echo "stack=python" >> "$GITHUB_OUTPUT"
-            echo "codeql_language=python" >> "$GITHUB_OUTPUT"
           else
             echo "stack=unknown" >> "$GITHUB_OUTPUT"
-            echo "codeql_language=" >> "$GITHUB_OUTPUT"
           fi
 
-  codeql:
-    name: CodeQL SAST
-    needs: detect-stack
-    if: needs.detect-stack.outputs.codeql_language != ''
+  semgrep:
+    name: Semgrep SAST
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4.2.2
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3.28.10
-        with:
-          languages: ${{ needs.detect-stack.outputs.codeql_language }}
-          queries: security-extended
+      - name: Install Semgrep
+        run: pip install --disable-pip-version-check semgrep
 
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3.28.10
+      # Informational only, matching the prior CodeQL job's behavior (findings
+      # annotated, never blocked a merge). Metrics disabled: no telemetry to
+      # Semgrep Inc. Rules are pulled from the public registry, no login/API key.
+      - name: Run Semgrep
+        run: |
+          semgrep scan \
+            --config p/security-audit \
+            --config p/secrets \
+            --metrics=off \
+            --text \
+            --output semgrep-report.txt \
+            . || true
+          cat semgrep-report.txt | tee -a "$GITHUB_STEP_SUMMARY"
 
-      - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@v3.28.10
+      - name: Upload Semgrep report
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          category: /language:${{ needs.detect-stack.outputs.codeql_language }}
+          name: semgrep-report
+          path: semgrep-report.txt
+          retention-days: 30
 
   govulncheck:
     name: Go vulnerability scan
@@ -90,27 +92,34 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4.2.2
 
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@v0.29.0
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'HIGH,CRITICAL'
-          ignore-unfixed: true
-          exit-code: '0'
+      # Installed directly from upstream's own install script rather than a
+      # marketplace action wrapper - sidesteps action-pin breakage like the
+      # trivy-action@v0.29.0 -> aquasecurity/setup-trivy@v0.2.2 failure.
+      - name: Install Trivy
+        run: curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
 
-      - name: Upload Trivy SARIF results
+      - name: Run Trivy vulnerability scanner
+        run: |
+          trivy fs \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --format table \
+            --exit-code 0 \
+            --output trivy-report.txt \
+            .
+          cat trivy-report.txt | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Trivy report
         if: always()
-        uses: github/codeql-action/upload-sarif@v3.28.10
+        uses: actions/upload-artifact@v4
         with:
-          sarif_file: 'trivy-results.sarif'
+          name: trivy-report
+          path: trivy-report.txt
+          retention-days: 30
 
   gitleaks:
     name: Gitleaks secret scan
@@ -123,10 +132,20 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up Go
+        uses: actions/setup-go@v5.3.0
+        with:
+          go-version: '1.23'
+          cache: false
+
+      # gitleaks the CLI is MIT-licensed and free; the GITLEAKS_LICENSE wall
+      # only applies to the gitleaks/gitleaks-action wrapper for org accounts.
+      # Installing and running the CLI directly avoids that wall entirely.
+      - name: Install Gitleaks
+        run: go install github.com/gitleaks/gitleaks/v8@latest
+
       - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2.3.7
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+        run: gitleaks detect --source . --redact -v
 
   npm-audit:
     name: npm dependency audit
