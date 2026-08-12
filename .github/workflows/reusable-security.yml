@@ -142,7 +142,7 @@ jobs:
       # only applies to the gitleaks/gitleaks-action wrapper for org accounts.
       # Installing and running the CLI directly avoids that wall entirely.
       - name: Install Gitleaks
-        run: go install github.com/gitleaks/gitleaks/v8@latest
+        run: go install github.com/zricethezav/gitleaks/v8@latest
 
       - name: Run Gitleaks
         run: gitleaks detect --source . --redact -v
