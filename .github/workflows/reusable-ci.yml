@@ -1,8 +1,49 @@
 name: Reusable CI
 
+# =============================================================================
+# COST CONTRACT — read before adding a job
+# =============================================================================
+# GitHub bills Actions **per job, rounded up to the next whole minute**. A job
+# that finishes in 3 seconds costs the same as one that runs for 59. The org is
+# on the Free plan (2,000 min/month for private repos), and in August 2026 this
+# workflow family burned 4,277 billed minutes against 1,214 minutes of actual
+# compute — 72% of the bill was rounding overhead — and exhausted the month's
+# quota on the 14th.
+#
+# The single worst offender was a `detect-stack` job that ran `[ -f go.mod ]`
+# in its own runner. Kerrigan and kerrUI call both this workflow and
+# reusable-security.yml, so they paid for it TWICE per run: 210 billed minutes
+# across Aug 1-20 for two `if` statements. It is gone. Callers now declare
+# `stack` statically, because a repository's language does not change between
+# pushes.
+#
+# Consequences for anyone editing this file:
+#   - A new job costs >= 1 billed minute on EVERY run of EVERY calling repo.
+#     Prefer adding a step to an existing job.
+#   - Jobs skipped by `if:` are free. Language gating is not the waste; the
+#     detector job was.
+#   - Never install a tool by compiling it from source (`go install ...`) when
+#     a release binary exists. See the Gitleaks note in reusable-security.yml.
+#   - `concurrency` must live in the CALLING workflow, not here: inside a called
+#     workflow `github.ref` resolves to the caller's ref, so a group defined
+#     here would collide across repositories.
+# =============================================================================
+
 on:
   workflow_call:
     inputs:
+      stack:
+        description: >-
+          Repository tech stack: go | node | python. Declared statically by the
+          caller — this replaced a per-run detection job that cost a full billed
+          minute on every run. See the cost contract above.
+        required: true
+        type: string
+      is-vite:
+        description: 'Whether the Node project is Vite-based (enables the Vite artifact cache)'
+        required: false
+        type: boolean
+        default: false
       go-version:
         description: 'Go version'
         required: false
@@ -24,41 +65,11 @@ permissions:
   checks: write
 
 jobs:
-  detect-stack:
-    name: Detect Tech Stack
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      stack: ${{ steps.detect.outputs.stack }}
-      is_vite: ${{ steps.detect.outputs.is_vite }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4.2.2
-
-      - name: Detect repository tech stack
-        id: detect
-        run: |
-          if [ -f "go.mod" ]; then
-            echo "stack=go" >> "$GITHUB_OUTPUT"
-          elif [ -f "package.json" ]; then
-            echo "stack=node" >> "$GITHUB_OUTPUT"
-            if grep -q "vite" package.json; then
-              echo "is_vite=true" >> "$GITHUB_OUTPUT"
-            else
-              echo "is_vite=false" >> "$GITHUB_OUTPUT"
-            fi
-          elif [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
-            echo "stack=python" >> "$GITHUB_OUTPUT"
-          else
-            echo "stack=unknown" >> "$GITHUB_OUTPUT"
-          fi
-
   ci-go:
     name: CI (Go)
-    needs: detect-stack
-    if: needs.detect-stack.outputs.stack == 'go'
+    if: inputs.stack == 'go'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       checks: write
@@ -76,7 +87,7 @@ jobs:
         run: go mod download
 
       - name: Run tests with coverage
-        run: go test ./... -v -race -coverprofile=coverage.out
+        run: go test ./... -race -coverprofile=coverage.out
 
       - name: Check test coverage
         run: |
@@ -91,19 +102,22 @@ jobs:
       - name: Run linter
         uses: golangci/golangci-lint-action@v8
         with:
-          version: latest
+          # Pinned, not `latest`: an unpinned linter makes CI results
+          # irreproducible across runs and silently widens the supply-chain
+          # surface on every invocation.
+          version: v2.13.2
           # Report only issues introduced by the change under test — most org
           # repos predate linting and a full-repo report would drown PRs.
           only-new-issues: true
 
       - name: Build binaries
-        run: go build -v ./...
+        run: go build ./...
 
   ci-node:
     name: CI (Node.js/TypeScript/Vite)
-    needs: detect-stack
-    if: needs.detect-stack.outputs.stack == 'node'
+    if: inputs.stack == 'node'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       checks: write
@@ -121,7 +135,7 @@ jobs:
         run: npm ci
 
       - name: Cache Vite build artifacts
-        if: needs.detect-stack.outputs.is_vite == 'true'
+        if: inputs.is-vite
         uses: actions/cache@v4
         with:
           path: node_modules/.vite
@@ -143,9 +157,9 @@ jobs:
 
   ci-python:
     name: CI (Python)
-    needs: detect-stack
-    if: needs.detect-stack.outputs.stack == 'python'
+    if: inputs.stack == 'python'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       checks: write
@@ -180,19 +194,19 @@ jobs:
           pip install pytest pytest-cov
           pytest --cov --cov-report=term-missing --cov-report=xml || echo "::warning::Tests completed with warnings"
 
+  # Safety net for a miswired caller. Skipped — and therefore free — whenever
+  # `stack` is one of the three supported values, which is the only way this
+  # workflow is meant to be called.
   ci-unknown:
     name: CI (Unknown/Not Configured)
-    needs: detect-stack
-    if: needs.detect-stack.outputs.stack == 'unknown'
+    if: inputs.stack != 'go' && inputs.stack != 'node' && inputs.stack != 'python'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: read
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4.2.2
-
-      - name: Warning - No CI configured
+      - name: Fail loudly on an unsupported stack input
         run: |
-          echo "::warning::Unable to detect tech stack (no go.mod, package.json, or requirements.txt)"
-          echo "::warning::Please configure repository-specific CI in .github/workflows/ci.yml"
+          echo "::error::reusable-ci.yml was called with stack='${{ inputs.stack }}'"
+          echo "::error::Expected one of: go, node, python"
           exit 1

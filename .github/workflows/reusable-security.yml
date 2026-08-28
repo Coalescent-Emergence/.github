@@ -1,8 +1,38 @@
 name: Reusable Security Scanning
 
+# =============================================================================
+# COST CONTRACT — see the long-form version in reusable-ci.yml
+# =============================================================================
+# Jobs bill per job, rounded up to the whole minute. Two changes here, both
+# measured against Aug 1-20 2026 (pre-lockout):
+#
+#   - `detect-stack` removed. It ran `[ -f go.mod ]` in its own runner and cost
+#     53 (Kerrigan) + 33 (kerrUI) + 38 (lwx-infra) = 124 billed minutes in 20
+#     days from THIS file alone, and reusable-ci.yml charged the same again.
+#     Callers now pass `stack` statically.
+#
+#   - Gitleaks no longer compiles itself from source. `go install
+#     github.com/zricethezav/gitleaks/v8@latest` built the tool on every single
+#     run — that is why this job cost 1.4 min/run on Kerrigan and 2.5 min/run on
+#     lwx-infra to scan repos that take seconds to scan. It now downloads a
+#     pinned release binary. This also removes an unpinned `@latest` from the
+#     supply chain.
+#
+# Full-history scanning (`fetch-depth: 0`) is deliberately KEPT. This org has
+# had a real credential leak, and a secret scanner that only sees the tip
+# commit cannot find a secret that was committed and then removed.
+# =============================================================================
+
 on:
   workflow_call:
     inputs:
+      stack:
+        description: >-
+          Repository tech stack: go | node | python. Declared statically by the
+          caller — this replaced a per-run detection job that cost a full billed
+          minute on every run.
+        required: true
+        type: string
       go-version:
         description: 'Go version'
         required: false
@@ -12,34 +42,17 @@ on:
 permissions:
   contents: read
 
+env:
+  # Pinned tool versions. Never use `latest` here: it makes scan results
+  # irreproducible run-to-run and silently widens the supply-chain surface.
+  GITLEAKS_VERSION: '8.30.1'
+  SEMGREP_VERSION: '1.175.0'
+
 jobs:
-  detect-stack:
-    name: Detect tech stack
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    outputs:
-      stack: ${{ steps.detect.outputs.stack }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4.2.2
-
-      - name: Detect tech stack for security rules
-        id: detect
-        run: |
-          if [ -f "go.mod" ]; then
-            echo "stack=go" >> "$GITHUB_OUTPUT"
-          elif [ -f "package.json" ]; then
-            echo "stack=node" >> "$GITHUB_OUTPUT"
-          elif [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
-            echo "stack=python" >> "$GITHUB_OUTPUT"
-          else
-            echo "stack=unknown" >> "$GITHUB_OUTPUT"
-          fi
-
   semgrep:
     name: Semgrep SAST
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
@@ -47,7 +60,7 @@ jobs:
         uses: actions/checkout@v4.2.2
 
       - name: Install Semgrep
-        run: pip install --disable-pip-version-check semgrep
+        run: pip install --disable-pip-version-check "semgrep==${SEMGREP_VERSION}"
 
       # Informational only, matching the prior CodeQL job's behavior (findings
       # annotated, never blocked a merge). Metrics disabled: no telemetry to
@@ -73,9 +86,9 @@ jobs:
 
   govulncheck:
     name: Go vulnerability scan
-    needs: detect-stack
-    if: needs.detect-stack.outputs.stack == 'go'
+    if: inputs.stack == 'go'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
@@ -96,6 +109,7 @@ jobs:
   trivy:
     name: Trivy filesystem vulnerability scan
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
@@ -130,34 +144,42 @@ jobs:
   gitleaks:
     name: Gitleaks secret scan
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4.2.2
         with:
+          # Full history is required: a secret that was committed and later
+          # removed is invisible to a shallow clone, and that is exactly the
+          # case a secret scanner exists to catch.
           fetch-depth: 0
-
-      - name: Set up Go
-        uses: actions/setup-go@v5.3.0
-        with:
-          go-version: '1.23'
-          cache: false
 
       # gitleaks the CLI is MIT-licensed and free; the GITLEAKS_LICENSE wall
       # only applies to the gitleaks/gitleaks-action wrapper for org accounts.
-      # Installing and running the CLI directly avoids that wall entirely.
+      # Installing the CLI directly avoids that wall entirely.
+      #
+      # This downloads the prebuilt release binary. It previously ran
+      # `go install ...@latest`, which set up a Go toolchain and COMPILED
+      # gitleaks from source on every run — the dominant cost of this job.
       - name: Install Gitleaks
-        run: go install github.com/zricethezav/gitleaks/v8@latest
+        run: |
+          curl -sSfL \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            -o /tmp/gitleaks.tar.gz
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          sudo install -m 0755 /tmp/gitleaks /usr/local/bin/gitleaks
+          gitleaks version
 
       - name: Run Gitleaks
         run: gitleaks detect --source . --redact -v
 
   npm-audit:
     name: npm dependency audit
-    needs: detect-stack
-    if: needs.detect-stack.outputs.stack == 'node'
+    if: inputs.stack == 'node'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
@@ -177,9 +199,9 @@ jobs:
 
   pip-audit:
     name: Python dependency audit
-    needs: detect-stack
-    if: needs.detect-stack.outputs.stack == 'python'
+    if: inputs.stack == 'python'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
